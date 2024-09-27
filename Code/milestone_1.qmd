@@ -1,0 +1,42 @@
+---
+title: "Project Milestone 1"
+author: "Peter Ward, Hayes Waddell, Nathan Gumagay"
+format: html
+editor: visual
+---
+
+# Read in Data
+
+```{r}
+library(readr)
+baseballdata <- read_csv("../data/statcast_pitch_swing_data_20240402_20240630.csv")
+```
+
+# Data Context
+
+Our data was collected using Statcast, by CSAS (Connecticut Sports Analytics) to analyze pitcher-batter interactions in MLB. Every MLB ballpark is equipped with Statcast tracking technology, which is used to acquire the data. See this link [statcastlink](https://www.mlb.com/glossary/statcast) for more background on Statcast. It contains data on 346,250 Major League Baseball plate appearances from 4/2/2024 to 6/30/2024 (first half of the 2024 regular season), as well as 94 different variables.
+
+## Data Codebook
+
+The codebook for our data can be found at this link: [codebooklink](https://baseballsavant.mlb.com/csv-docs)
+
+
+# Project Topic
+
+The effect of pitchers on batters' swing speeds and swing lengths
+
+
+# Questions We Wish To Explore
+
+1. Do pitchers modify batters' behavior? That is do batters' swing speeds differ depending on something pitchers do?
+
+2. Do some pitchers elicit different swing speeds and swing lengths than others? That is, are some pitchers better at slowing down batters' swing speeds or making their swings longer?
+
+3. If pitchers do affect a batter's swing speed/length, what is the cause of this? Is it pitch speed, pitch movement, or something else?
+
+
+# Plan
+
+With this data, we can address all of the above questions individually:
+
+To address these questions, we would need pitch speed, pitch movement, pitch spin, swing speed, swing length, pitcher name. Our dataset has variables that correspond to each of these measurements. Roughly, we would start by grouping by pitcher and analyzing their average pitch movements, spins, and velocities. Then, we would analyze batters' swing speeds and lengths, and filter to only look at instances when their swing speeds/lengths are unusually low or high. Then we could explore this further by looking for correlations between pitcher data and the observed unusual values for swing speed/length, while comparing to the individual hitters' average swing statistics.
