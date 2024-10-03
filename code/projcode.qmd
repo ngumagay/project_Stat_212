@@ -5,10 +5,11 @@ format: html
 editor: visual
 ---
 
-# Read in Data
+# Read in Data and Data Cleaning
 
 ```{r}
 library(readr)
+library(tidyverse)
 baseballdata <- read_csv("../data/swing_data.csv")
 playerdata <- read_csv("../data/player_data.csv")
 
@@ -28,6 +29,39 @@ baseballdataclean2 <- baseballdataclean2 %>%
   filter(!description %in% c("ball", "called_strike", "blocked_ball", "pitchout", "hit_by_pitch", "foul_bunt","missed_bunt", "bunt_foul_tip"))
   
   
+```
+
+```{r}
+fastswings <- baseballdataclean2 %>%
+  filter(!is.na(PLAYERNAME)) %>%
+  filter(bat_speed > 75)
+
+pitcheraverage <- fastswings %>%
+  group_by(PLAYERNAME) %>%
+  summarize(avg_bat_speed = mean(bat_speed)) %>%
+  arrange(desc(avg_bat_speed))
+
+pitcheraverage
+
+pitchercount <- fastswings %>%
+  group_by(PLAYERNAME) %>%
+  count() %>%
+  arrange(desc(n))
+
+pitchercount
+
+pitcherfastswing <- pitcheraverage %>% 
+  left_join(pitchercount, by = c("PLAYERNAME" = "PLAYERNAME"))
+
+pitcherfastswing
+
+pitcherfastswing2 <- pitcherfastswing %>%
+  filter(n >= 8)
+
+pitcherfastswing2 %>%
+  arrange(desc(avg_bat_speed))
+
+
 ```
 
 
