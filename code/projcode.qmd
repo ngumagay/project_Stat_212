@@ -10,11 +10,33 @@ editor: visual
 ```{r}
 library(readr)
 baseballdata <- read_csv("../data/swing_data.csv")
+playerdata <- read_csv("../data/player_data.csv")
+
+playerdataclean <- playerdata %>%
+  select(PLAYERNAME, LASTNAME, MLBID)
 ```
+```{r}
+baseballdataclean <- baseballdata %>%
+  select(game_date, release_speed, player_name, events, zone, stand, p_throws, bb_type, balls, strikes, pfx_x, pfx_z, outs_when_up, inning, hit_distance_sc, launch_angle, launch_speed, effective_speed, release_spin_rate, launch_speed_angle, estimated_ba_using_speedangle, estimated_woba_using_speedangle, woba_value, bat_score, fld_score, pitch_name, pitcher, bat_speed, swing_length, description)
+
+baseballdataclean2 <- baseballdataclean %>% 
+  left_join(playerdataclean, by = c("pitcher" = "MLBID"))
+
+baseballdataclean2 <- baseballdataclean2 %>%
+  filter(bat_speed != 'NA') %>%
+  filter(swing_length != 'NA') %>%
+  filter(!description %in% c("ball", "called_strike", "blocked_ball", "pitchout", "hit_by_pitch", "foul_bunt","missed_bunt", "bunt_foul_tip"))
+  
+  
+```
+
+
 
 # Data Context
 
 Our data was collected using Statcast, by CSAS (Connecticut Sports Analytics) to analyze pitcher-batter interactions in MLB. Every MLB ballpark is equipped with Statcast tracking technology, which is used to acquire the data. See this link [statcastlink](https://www.mlb.com/glossary/statcast) for more background on Statcast. It contains data on 346,250 Major League Baseball plate appearances from 4/2/2024 to 6/30/2024 (first half of the 2024 regular season), as well as 94 different variables.
+
+Link to player ID data: [playerdatalink](https://www.smartfantasybaseball.com/tools/)
 
 ## Data Codebook
 
