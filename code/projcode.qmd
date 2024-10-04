@@ -8,6 +8,8 @@ editor: visual
 # Read in Data and Data Cleaning
 
 ```{r}
+# Reading in our player name and player data datasets
+
 library(readr)
 library(tidyverse)
 baseballdata <- read_csv("../data/swing_data.csv")
@@ -17,6 +19,8 @@ playerdataclean <- playerdata %>%
   select(PLAYERNAME, LASTNAME, MLBID)
 ```
 ```{r}
+# Data cleaning including selecting relevant variables that might be useful in our analysis, joining datasets to include pitcher's names in our main dataset, and filtering out any data points that are NA for bat_speed and swing_length (since we will rely heavily on these variables for our analysis), as well as any data points that don't involve any swing being made(takes, hit by pitches, bunts, etc.)
+
 baseballdataclean <- baseballdata %>%
   select(game_date, release_speed, player_name, events, zone, stand, p_throws, bb_type, balls, strikes, pfx_x, pfx_z, outs_when_up, inning, hit_distance_sc, launch_angle, launch_speed, effective_speed, release_spin_rate, launch_speed_angle, estimated_ba_using_speedangle, estimated_woba_using_speedangle, woba_value, bat_score, fld_score, pitch_name, pitcher, bat_speed, swing_length, description)
 
@@ -32,6 +36,8 @@ baseballdataclean2 <- baseballdataclean2 %>%
 ```
 
 ```{r}
+# Generating a dataset of the top 25 pitchers who generate the fastest bat speeds against, arranged by their average bat speed against with a count of their number of data points
+
 fastswings <- baseballdataclean2 %>%
   filter(!is.na(PLAYERNAME)) %>%
   filter(bat_speed > 75)
@@ -58,10 +64,81 @@ pitcherfastswing
 pitcherfastswing2 <- pitcherfastswing %>%
   filter(n >= 8)
 
-pitcherfastswing2 %>%
-  arrange(desc(avg_bat_speed))
+top25fast <- pitcherfastswing2 %>%
+  arrange(desc(avg_bat_speed)) %>%
+  head(25)
+
+top25fast
 
 
+```
+```{r}
+# Calculating average spin rate by pitch type for the top 25 pitchers with the highest average swing speed against
+
+top25allfast <-top25fast %>%
+  left_join(baseballdataclean2, by = c("PLAYERNAME" = "PLAYERNAME"))
+
+fastspins <- top25allfast %>%
+  group_by(pitch_name) %>%
+  summarize(meanspinfast = mean(release_spin_rate, na.rm = TRUE))
+
+fastspins
+```
+```{r}
+# Generating a dataset of the top 25 pitchers who generate the slowest bat speeds against, arranged by their average bat speed against with a count of their number of data points
+
+tenth_percentile <- quantile(baseballdataclean2$bat_speed, 0.1)
+
+slowswings <- baseballdataclean2 %>%
+  filter(!is.na(PLAYERNAME)) %>%
+  filter(bat_speed < tenth_percentile)
+
+pitcheraverageslow <- slowswings %>%
+  group_by(PLAYERNAME) %>%
+  summarize(avg_bat_speed = mean(bat_speed)) %>%
+  arrange(avg_bat_speed)
+
+pitcheraverageslow
+
+pitchercountslow <- slowswings %>%
+  group_by(PLAYERNAME) %>%
+  count() %>%
+  arrange(desc(n))
+
+pitchercountslow
+
+pitcherslowswing <- pitcheraverageslow %>% 
+  left_join(pitchercountslow, by = c("PLAYERNAME" = "PLAYERNAME"))
+
+pitcherslowswing
+
+pitcherslowswing2 <- pitcherslowswing %>%
+  filter(n >= 8)
+
+top25slow <- pitcherslowswing2 %>%
+  arrange(avg_bat_speed) %>%
+  head(25)
+
+top25slow
+```
+```{r}
+# Calculating average spin rate by pitch type for the top 25 pitchers with the lowest average swing speed against
+
+top25allslow <-top25slow %>%
+  left_join(baseballdataclean2, by = c("PLAYERNAME" = "PLAYERNAME"))
+
+slowspins <- top25allslow %>%
+  group_by(pitch_name) %>%
+  summarize(meanspinslow = mean(release_spin_rate, na.rm = TRUE))
+
+slowspins
+```
+```{r}
+# Showing Spin difference on average between pitchers who generate slow bat speeds vs pitchers who generate fast bat speeds
+
+fastspins %>%
+  left_join(slowspins, by = c("pitch_name" = "pitch_name")) %>%
+  mutate(spindiff = meanspinslow - meanspinfast)
 ```
 
 
