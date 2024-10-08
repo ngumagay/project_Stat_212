@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.555">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -34,7 +34,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -158,9 +158,12 @@ dbl (11): MLBID, CBSID, NFBCID, ESPNID, BPID, YAHOOID, ROTOWIREID, FANDUELID...
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(playerdataclean, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"pitcher"</span> <span class="ot">=</span> <span class="st">"MLBID"</span>))</span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>baseballdataclean2 <span class="ot">&lt;-</span> baseballdataclean2 <span class="sc">%&gt;%</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(bat_speed <span class="sc">!=</span> <span class="st">'NA'</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(swing_length <span class="sc">!=</span> <span class="st">'NA'</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>description <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"ball"</span>, <span class="st">"called_strike"</span>, <span class="st">"blocked_ball"</span>, <span class="st">"pitchout"</span>, <span class="st">"hit_by_pitch"</span>, <span class="st">"foul_bunt"</span>,<span class="st">"missed_bunt"</span>, <span class="st">"bunt_foul_tip"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pitch_name =</span> <span class="fu">recode</span>(pitch_name, <span class="st">"4-Seam Fastball"</span> <span class="ot">=</span> <span class="st">"4 Seam"</span>))</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>baseballdataclean2 <span class="ot">&lt;-</span> baseballdataclean2 <span class="sc">%&gt;%</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(bat_speed <span class="sc">!=</span> <span class="st">'NA'</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(swing_length <span class="sc">!=</span> <span class="st">'NA'</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>description <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"ball"</span>, <span class="st">"called_strike"</span>, <span class="st">"blocked_ball"</span>, <span class="st">"pitchout"</span>, <span class="st">"hit_by_pitch"</span>, <span class="st">"foul_bunt"</span>,<span class="st">"missed_bunt"</span>, <span class="st">"bunt_foul_tip"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating a dataset of the top 25 pitchers who generate the fastest bat speeds against, arranged by their average bat speed against with a count of their number of data points</span></span>
@@ -272,17 +275,17 @@ dbl (11): MLBID, CBSID, NFBCID, ESPNID, BPID, YAHOOID, ROTOWIREID, FANDUELID...
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>fastspins</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 9 × 2
-  pitch_name      meanspinfast
-  &lt;chr&gt;                  &lt;dbl&gt;
-1 4-Seam Fastball        2255.
-2 Changeup               1834.
-3 Curveball              2595.
-4 Cutter                 2287.
-5 Knuckle Curve          2504.
-6 Sinker                 2070.
-7 Slider                 2289.
-8 Split-Finger            929.
-9 Sweeper                2472.</code></pre>
+  pitch_name    meanspinfast
+  &lt;chr&gt;                &lt;dbl&gt;
+1 4 Seam               2255.
+2 Changeup             1834.
+3 Curveball            2595.
+4 Cutter               2287.
+5 Knuckle Curve        2504.
+6 Sinker               2070.
+7 Slider               2289.
+8 Split-Finger          929.
+9 Sweeper              2472.</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -397,38 +400,209 @@ dbl (11): MLBID, CBSID, NFBCID, ESPNID, BPID, YAHOOID, ROTOWIREID, FANDUELID...
 <span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>slowspins</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 9 × 2
-  pitch_name      meanspinslow
-  &lt;chr&gt;                  &lt;dbl&gt;
-1 4-Seam Fastball        2387.
-2 Changeup               1926.
-3 Curveball              2782.
-4 Cutter                 2448.
-5 Knuckle Curve          2397.
-6 Sinker                 2151.
-7 Slider                 2497.
-8 Split-Finger           1393.
-9 Sweeper                2687.</code></pre>
+  pitch_name    meanspinslow
+  &lt;chr&gt;                &lt;dbl&gt;
+1 4 Seam               2387.
+2 Changeup             1926.
+3 Curveball            2782.
+4 Cutter               2448.
+5 Knuckle Curve        2397.
+6 Sinker               2151.
+7 Slider               2497.
+8 Split-Finger         1393.
+9 Sweeper              2687.</code></pre>
 </div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Showing Spin difference on average between pitchers who generate slow bat speeds vs pitchers who generate fast bat speeds</span></span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>fastspins <span class="sc">%&gt;%</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>spindiff <span class="ot">&lt;-</span> fastspins <span class="sc">%&gt;%</span></span>
 <span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(slowspins, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"pitch_name"</span> <span class="ot">=</span> <span class="st">"pitch_name"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">spindiff =</span> meanspinslow <span class="sc">-</span> meanspinfast)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">spindiff =</span> meanspinslow <span class="sc">-</span> meanspinfast)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>spindiff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 9 × 4
-  pitch_name      meanspinfast meanspinslow spindiff
-  &lt;chr&gt;                  &lt;dbl&gt;        &lt;dbl&gt;    &lt;dbl&gt;
-1 4-Seam Fastball        2255.        2387.    132. 
-2 Changeup               1834.        1926.     92.2
-3 Curveball              2595.        2782.    187. 
-4 Cutter                 2287.        2448.    162. 
-5 Knuckle Curve          2504.        2397.   -108. 
-6 Sinker                 2070.        2151.     80.5
-7 Slider                 2289.        2497.    208. 
-8 Split-Finger            929.        1393.    464. 
-9 Sweeper                2472.        2687.    215. </code></pre>
+  pitch_name    meanspinfast meanspinslow spindiff
+  &lt;chr&gt;                &lt;dbl&gt;        &lt;dbl&gt;    &lt;dbl&gt;
+1 4 Seam               2255.        2387.    132. 
+2 Changeup             1834.        1926.     92.2
+3 Curveball            2595.        2782.    187. 
+4 Cutter               2287.        2448.    162. 
+5 Knuckle Curve        2504.        2397.   -108. 
+6 Sinker               2070.        2151.     80.5
+7 Slider               2289.        2497.    208. 
+8 Split-Finger          929.        1393.    464. 
+9 Sweeper              2472.        2687.    215. </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>spindiff <span class="sc">%&gt;%</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="fu">aes</span>(<span class="at">x =</span> pitch_name, <span class="at">y =</span> spindiff, <span class="at">fill =</span> spindiff)) <span class="sc">+</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"cyan"</span>, <span class="at">high =</span> <span class="st">'navy'</span>) <span class="sc">+</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Average Spin Rate Difference: Pitchers With Fast vs Slow Bat Speeds Against"</span>, <span class="at">caption =</span> <span class="st">"Calculation: spin of pitchers with slow bat speeds against - spin of pitchers with fast bat speeds against"</span>, <span class="at">x =</span> <span class="st">"Pitch Type"</span>, <span class="at">y =</span> <span class="st">"Difference In Average Spin Rate"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="projcode_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>slowvelo <span class="ot">&lt;-</span> top25allslow <span class="sc">%&gt;%</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(pitch_name) <span class="sc">%&gt;%</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">meanveloslow =</span> <span class="fu">mean</span>(release_speed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>slowvelo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 9 × 2
+  pitch_name    meanveloslow
+  &lt;chr&gt;                &lt;dbl&gt;
+1 4 Seam                93.9
+2 Changeup              87.1
+3 Curveball             81.1
+4 Cutter                89.2
+5 Knuckle Curve         80.2
+6 Sinker                92.6
+7 Slider                85.6
+8 Split-Finger          85.3
+9 Sweeper               83.4</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>fastvelo <span class="ot">&lt;-</span> top25allfast <span class="sc">%&gt;%</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(pitch_name) <span class="sc">%&gt;%</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">meanvelofast =</span> <span class="fu">mean</span>(release_speed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>fastvelo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 9 × 2
+  pitch_name    meanvelofast
+  &lt;chr&gt;                &lt;dbl&gt;
+1 4 Seam                94.4
+2 Changeup              84.9
+3 Curveball             76.9
+4 Cutter                88.5
+5 Knuckle Curve         84.4
+6 Sinker                92.3
+7 Slider                83.3
+8 Split-Finger          84.6
+9 Sweeper               81.4</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>velodiff <span class="ot">&lt;-</span> fastvelo <span class="sc">%&gt;%</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(slowvelo, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"pitch_name"</span> <span class="ot">=</span> <span class="st">"pitch_name"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">velodiff =</span> meanveloslow <span class="sc">-</span> meanvelofast)</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>velodiff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 9 × 4
+  pitch_name    meanvelofast meanveloslow velodiff
+  &lt;chr&gt;                &lt;dbl&gt;        &lt;dbl&gt;    &lt;dbl&gt;
+1 4 Seam                94.4         93.9   -0.463
+2 Changeup              84.9         87.1    2.25 
+3 Curveball             76.9         81.1    4.19 
+4 Cutter                88.5         89.2    0.645
+5 Knuckle Curve         84.4         80.2   -4.25 
+6 Sinker                92.3         92.6    0.226
+7 Slider                83.3         85.6    2.35 
+8 Split-Finger          84.6         85.3    0.741
+9 Sweeper               81.4         83.4    1.94 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>velodiff <span class="sc">%&gt;%</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="fu">aes</span>(<span class="at">x =</span> pitch_name, <span class="at">y =</span> velodiff, <span class="at">fill =</span> velodiff)) <span class="sc">+</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"pink"</span>, <span class="at">high =</span> <span class="st">'violet'</span>) <span class="sc">+</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Average Velocity Difference: Pitchers With Fast vs Slow Bat Speeds Against"</span>, <span class="at">caption =</span> <span class="st">"Calculation: velo of pitchers with slow bat speeds against - velo of pitchers with fast bat speeds against"</span>, <span class="at">x =</span> <span class="st">"Pitch Type"</span>, <span class="at">y =</span> <span class="st">"Avg Velo Difference"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="projcode_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>slowdiff <span class="ot">&lt;-</span> top25allslow <span class="sc">%&gt;%</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(pitch_name) <span class="sc">%&gt;%</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">meanveloslow =</span> <span class="fu">mean</span>(release_speed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">meanpercslow =</span> <span class="fu">mean</span>(effective_speed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">slowdiffspeed =</span> meanpercslow <span class="sc">-</span> meanveloslow)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>slowdiff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 9 × 4
+  pitch_name    meanveloslow meanpercslow slowdiffspeed
+  &lt;chr&gt;                &lt;dbl&gt;        &lt;dbl&gt;         &lt;dbl&gt;
+1 4 Seam                93.9         94.4         0.491
+2 Changeup              87.1         87.4         0.276
+3 Curveball             81.1         81.3         0.190
+4 Cutter                89.2         89.6         0.388
+5 Knuckle Curve         80.2         80.5         0.343
+6 Sinker                92.6         93.0         0.472
+7 Slider                85.6         86.2         0.577
+8 Split-Finger          85.3         85.6         0.242
+9 Sweeper               83.4         83.3        -0.100</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>slowdiffplot <span class="ot">&lt;-</span> slowdiff <span class="sc">%&gt;%</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="fu">aes</span>(<span class="at">x =</span> pitch_name, <span class="at">y =</span> slowdiffspeed, <span class="at">fill =</span> slowdiffspeed)) <span class="sc">+</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Eff Speed - Actual Speed"</span>, <span class="at">title =</span> <span class="st">"Difference in effective release speed vs actual release speed for slow bat speeds"</span>) <span class="sc">+</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"lightgreen"</span>, <span class="at">high =</span> <span class="st">'darkgreen'</span>) <span class="sc">+</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>fastdiff <span class="ot">&lt;-</span> top25allfast <span class="sc">%&gt;%</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(pitch_name) <span class="sc">%&gt;%</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">meanvelofast =</span> <span class="fu">mean</span>(release_speed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">meanpercfast =</span> <span class="fu">mean</span>(effective_speed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">fastdiffspeed =</span> meanpercfast <span class="sc">-</span> meanvelofast)</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>fastdiff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 9 × 4
+  pitch_name    meanvelofast meanpercfast fastdiffspeed
+  &lt;chr&gt;                &lt;dbl&gt;        &lt;dbl&gt;         &lt;dbl&gt;
+1 4 Seam                94.4         94.9        0.479 
+2 Changeup              84.9         85.5        0.582 
+3 Curveball             76.9         76.8       -0.0822
+4 Cutter                88.5         88.9        0.409 
+5 Knuckle Curve         84.4         85.1        0.675 
+6 Sinker                92.3         92.7        0.408 
+7 Slider                83.3         83.7        0.457 
+8 Split-Finger          84.6         85.3        0.690 
+9 Sweeper               81.4         81.7        0.281 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>fastdiffplot <span class="ot">&lt;-</span> fastdiff <span class="sc">%&gt;%</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="fu">aes</span>(<span class="at">x =</span> pitch_name, <span class="at">y =</span> fastdiffspeed, <span class="at">fill =</span> fastdiffspeed)) <span class="sc">+</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Eff Speed - Actual Speed"</span>, <span class="at">title =</span> <span class="st">"Difference in effective release speed vs actual release speed for fast bat speeds"</span>) <span class="sc">+</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"orange"</span>, <span class="at">high =</span> <span class="st">'red'</span>) <span class="sc">+</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'gridExtra'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:dplyr':
+
+    combine</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(slowdiffplot, fastdiffplot, <span class="at">nrow =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="projcode_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
@@ -496,18 +670,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -539,7 +702,29 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
       var filterRegex = new RegExp('/' + window.location.host + '/');
@@ -547,7 +732,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
     // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
     for (var i=0; i<links.length; i++) {
       const link = links[i];
       if (!isInternal(link.href)) {

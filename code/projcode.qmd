@@ -28,6 +28,9 @@ baseballdataclean2 <- baseballdataclean %>%
   left_join(playerdataclean, by = c("pitcher" = "MLBID"))
 
 baseballdataclean2 <- baseballdataclean2 %>%
+  mutate(pitch_name = recode(pitch_name, "4-Seam Fastball" = "4 Seam"))
+
+baseballdataclean2 <- baseballdataclean2 %>%
   filter(bat_speed != 'NA') %>%
   filter(swing_length != 'NA') %>%
   filter(!description %in% c("ball", "called_strike", "blocked_ball", "pitchout", "hit_by_pitch", "foul_bunt","missed_bunt", "bunt_foul_tip"))
@@ -136,9 +139,83 @@ slowspins
 ```{r}
 # Showing Spin difference on average between pitchers who generate slow bat speeds vs pitchers who generate fast bat speeds
 
-fastspins %>%
+spindiff <- fastspins %>%
   left_join(slowspins, by = c("pitch_name" = "pitch_name")) %>%
   mutate(spindiff = meanspinslow - meanspinfast)
+
+spindiff
+```
+```{r}
+spindiff %>%
+  ggplot() +
+  geom_col(aes(x = pitch_name, y = spindiff, fill = spindiff)) +
+  scale_fill_gradient(low = "cyan", high = 'navy') +
+  theme_minimal() +
+  labs(title = "Average Spin Rate Difference: Pitchers With Fast vs Slow Bat Speeds Against", caption = "Calculation: spin of pitchers with slow bat speeds against - spin of pitchers with fast bat speeds against", x = "Pitch Type", y = "Difference In Average Spin Rate")
+```
+```{r}
+slowvelo <- top25allslow %>%
+  group_by(pitch_name) %>%
+  summarize(meanveloslow = mean(release_speed, na.rm = TRUE))
+
+slowvelo
+```
+```{r}
+fastvelo <- top25allfast %>%
+  group_by(pitch_name) %>%
+  summarize(meanvelofast = mean(release_speed, na.rm = TRUE))
+
+fastvelo
+```
+```{r}
+velodiff <- fastvelo %>%
+  left_join(slowvelo, by = c("pitch_name" = "pitch_name")) %>%
+  mutate(velodiff = meanveloslow - meanvelofast)
+
+velodiff
+```
+```{r}
+velodiff %>%
+  ggplot() +
+  geom_col(aes(x = pitch_name, y = velodiff, fill = velodiff)) +
+  scale_fill_gradient(low = "pink", high = 'violet') +
+  theme_minimal() +
+  labs(title = "Average Velocity Difference: Pitchers With Fast vs Slow Bat Speeds Against", caption = "Calculation: velo of pitchers with slow bat speeds against - velo of pitchers with fast bat speeds against", x = "Pitch Type", y = "Avg Velo Difference")
+```
+```{r}
+slowdiff <- top25allslow %>%
+  group_by(pitch_name) %>%
+  summarize(meanveloslow = mean(release_speed, na.rm = TRUE), meanpercslow = mean(effective_speed, na.rm = TRUE)) %>%
+  mutate(slowdiffspeed = meanpercslow - meanveloslow)
+
+slowdiff
+
+slowdiffplot <- slowdiff %>%
+  ggplot() +
+  geom_col(aes(x = pitch_name, y = slowdiffspeed, fill = slowdiffspeed)) +
+  labs(y = "Eff Speed - Actual Speed", title = "Difference in effective release speed vs actual release speed for slow bat speeds") +
+  scale_fill_gradient(low = "lightgreen", high = 'darkgreen') +
+  theme_minimal()
+```
+```{r}
+fastdiff <- top25allfast %>%
+  group_by(pitch_name) %>%
+  summarize(meanvelofast = mean(release_speed, na.rm = TRUE), meanpercfast = mean(effective_speed, na.rm = TRUE)) %>%
+  mutate(fastdiffspeed = meanpercfast - meanvelofast)
+
+fastdiff
+
+fastdiffplot <- fastdiff %>%
+  ggplot() +
+  geom_col(aes(x = pitch_name, y = fastdiffspeed, fill = fastdiffspeed)) +
+  labs(y = "Eff Speed - Actual Speed", title = "Difference in effective release speed vs actual release speed for fast bat speeds") +
+  scale_fill_gradient(low = "orange", high = 'red') +
+  theme_minimal()
+```
+```{r}
+library(gridExtra)
+
+grid.arrange(slowdiffplot, fastdiffplot, nrow = 2)
 ```
 
 
