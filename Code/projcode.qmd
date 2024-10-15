@@ -12,17 +12,24 @@ editor: visual
 
 library(readr)
 library(tidyverse)
+# Data from first half of 2024 season for every player
 baseballdata <- read_csv("../data/swing_data.csv")
+
+# Pitcher name data
 playerdata <- read_csv("../data/player_data.csv")
 
+# Data from entire 2024 season, only containing qualified pitchers
+pitcherdata <- read_csv("../data/pitcher_data.csv")
+
+# Choosing relevant variables from name dataset
 playerdataclean <- playerdata %>%
-  select(PLAYERNAME, LASTNAME, MLBID)
+  select(PLAYERNAME, LASTNAME, MLBID, THROWS)
 ```
 ```{r}
 # Data cleaning including selecting relevant variables that might be useful in our analysis, joining datasets to include pitcher's names in our main dataset, and filtering out any data points that are NA for bat_speed and swing_length (since we will rely heavily on these variables for our analysis), as well as any data points that don't involve any swing being made(takes, hit by pitches, bunts, etc.)
 
 baseballdataclean <- baseballdata %>%
-  select(game_date, release_speed, player_name, events, zone, stand, p_throws, bb_type, balls, strikes, pfx_x, pfx_z, outs_when_up, inning, hit_distance_sc, launch_angle, launch_speed, effective_speed, release_spin_rate, launch_speed_angle, estimated_ba_using_speedangle, estimated_woba_using_speedangle, woba_value, bat_score, fld_score, pitch_name, pitcher, bat_speed, swing_length, description)
+  select(game_date, release_speed, player_name, events, zone, stand, bb_type, balls, strikes, pfx_x, pfx_z, outs_when_up, inning, hit_distance_sc, launch_angle, launch_speed, effective_speed, release_spin_rate, launch_speed_angle, estimated_ba_using_speedangle, estimated_woba_using_speedangle, woba_value, bat_score, fld_score, pitch_name, pitcher, bat_speed, swing_length, description)
 
 baseballdataclean2 <- baseballdataclean %>% 
   left_join(playerdataclean, by = c("pitcher" = "MLBID"))
@@ -34,38 +41,81 @@ baseballdataclean2 <- baseballdataclean2 %>%
   filter(bat_speed != 'NA') %>%
   filter(swing_length != 'NA') %>%
   filter(!description %in% c("ball", "called_strike", "blocked_ball", "pitchout", "hit_by_pitch", "foul_bunt","missed_bunt", "bunt_foul_tip"))
-  
+
+baseballdataclean2 <- baseballdataclean2 %>%
+  filter(launch_speed != 'NA') %>%
+  mutate(teamwinning = ifelse(bat_score > fld_score, TRUE, FALSE)) %>%
+  mutate(sameside = ifelse(THROWS == stand, TRUE, FALSE)) %>%
+  group_by(PLAYERNAME) %>%
+  mutate(n = n())
+
+# Calculate means for each numeric variable
+mean_summary <- baseballdataclean2 %>%
+  filter(n > 50) %>%
+  group_by(PLAYERNAME) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
   
 ```
 
 ```{r}
-# Generating a dataset of the top 25 pitchers who generate the fastest bat speeds against, arranged by their average bat speed against with a count of their number of data points
+baseballdataclean2 %>%
+  filter(launch_speed != 'NA') %>%
+  ggplot(aes(x =  bat_speed, y = launch_speed)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = TRUE) +
+  labs(title = "Relationship Between Bat Speed and Exit Velocity", y = "Exit Velocity") +
+  theme_minimal()
+```
 
-fastswings <- baseballdataclean2 %>%
-  filter(!is.na(PLAYERNAME)) %>%
-  filter(bat_speed > 75)
+```{r}
+baseballdataclean2 %>%
+  ggplot(aes(x =  bat_speed, y = swing_length)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = TRUE) +
+  labs(title = "Relationship Between Bat Speed and Swing Length") +
+  theme_minimal()
+```
+```{r}
+pitcherdata %>%
+  ggplot(aes(x = fast_swing_rate, y = hard_hit_percent)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  labs(title = "Relationship Between Hard hit rate and Average Swing Speed (Qualified)") +
+  theme_minimal()
+```
 
-pitcheraverage <- fastswings %>%
+```{r}
+pitcherdata %>%
+  ggplot(aes(x = fast_swing_rate, y = p_era, color = avg_swing_speed)) +
+  scale_color_gradient(low = "blue", high = "red") +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  theme_minimal() +
+  labs(title = "Relationship Between Average Swing Speed Against and Pitcher ERA (Qualified)")
+```
+```{r}
+pitcherdata %>%
+  ggplot(aes(x = hard_hit_percent, y = p_era)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  theme_minimal() +
+  labs(title = "Relationship Between Hard Hit Rate and Pitcher ERA")
+```
+# THE FOLLOWING ANALYSIS USES THE DATASET FROM THE FIRST HALF OF THE 2024 SEASON
+
+
+```{r}
+# Generating a dataset of the 25 pitchers that batters swing the fastest against, arranged by their average bat speed against with a count of their number of data points
+
+pitcheraverage <- baseballdataclean2 %>%
   group_by(PLAYERNAME) %>%
-  summarize(avg_bat_speed = mean(bat_speed)) %>%
+  summarize(avg_bat_speed = mean(bat_speed), n = n()) %>%
   arrange(desc(avg_bat_speed))
 
 pitcheraverage
 
-pitchercount <- fastswings %>%
-  group_by(PLAYERNAME) %>%
-  count() %>%
-  arrange(desc(n))
-
-pitchercount
-
-pitcherfastswing <- pitcheraverage %>% 
-  left_join(pitchercount, by = c("PLAYERNAME" = "PLAYERNAME"))
-
-pitcherfastswing
-
-pitcherfastswing2 <- pitcherfastswing %>%
-  filter(n >= 8)
+pitcherfastswing2 <- pitcheraverage %>%
+  filter(n >= 20)
 
 top25fast <- pitcherfastswing2 %>%
   arrange(desc(avg_bat_speed)) %>%
@@ -90,33 +140,15 @@ fastspins
 ```{r}
 # Generating a dataset of the top 25 pitchers who generate the slowest bat speeds against, arranged by their average bat speed against with a count of their number of data points
 
-tenth_percentile <- quantile(baseballdataclean2$bat_speed, 0.1)
-
-slowswings <- baseballdataclean2 %>%
-  filter(!is.na(PLAYERNAME)) %>%
-  filter(bat_speed < tenth_percentile)
-
-pitcheraverageslow <- slowswings %>%
+pitcheraverageslow <- baseballdataclean2 %>%
   group_by(PLAYERNAME) %>%
-  summarize(avg_bat_speed = mean(bat_speed)) %>%
+  summarize(avg_bat_speed = mean(bat_speed), n = n()) %>%
   arrange(avg_bat_speed)
 
 pitcheraverageslow
 
-pitchercountslow <- slowswings %>%
-  group_by(PLAYERNAME) %>%
-  count() %>%
-  arrange(desc(n))
-
-pitchercountslow
-
-pitcherslowswing <- pitcheraverageslow %>% 
-  left_join(pitchercountslow, by = c("PLAYERNAME" = "PLAYERNAME"))
-
-pitcherslowswing
-
-pitcherslowswing2 <- pitcherslowswing %>%
-  filter(n >= 8)
+pitcherslowswing2 <- pitcheraverageslow %>%
+  filter(n >= 10)
 
 top25slow <- pitcherslowswing2 %>%
   arrange(avg_bat_speed) %>%
@@ -139,7 +171,8 @@ slowspins
 ```{r}
 # Showing Spin difference on average between pitchers who generate slow bat speeds vs pitchers who generate fast bat speeds
 
-spindiff <- fastspins %>%
+spindiff <- fastspins %>% 
+  filter(pitch_name != 'Split-Finger') %>%
   left_join(slowspins, by = c("pitch_name" = "pitch_name")) %>%
   mutate(spindiff = meanspinslow - meanspinfast)
 
@@ -218,6 +251,71 @@ library(gridExtra)
 grid.arrange(slowdiffplot, fastdiffplot, nrow = 2)
 ```
 
+```{r}
+slowmove <- top25allslow %>%
+  group_by(pitch_name) %>%
+  summarize(meanvertslow = mean(pfx_z, na.rm = TRUE), meanhorizslow = mean(pfx_x, na.rm = TRUE))
+
+slowmove
+```
+```{r}
+fastmove <- top25allfast %>%
+  group_by(pitch_name) %>%
+  summarize(meanvertfast = mean(pfx_z, na.rm = TRUE), meanhorizfast = mean(pfx_x, na.rm = TRUE))
+
+fastmove
+```
+```{r}
+slowmove %>%
+  ggplot(aes(x = pitch_name, y = meanvertslow)) +
+  geom_col() +
+  theme_minimal()
+
+fastmove %>%
+  ggplot(aes(x = pitch_name, y = meanvertfast)) +
+  geom_col() +
+  theme_minimal()
+```
+```{r}
+slowmove %>%
+  ggplot(aes(y = pitch_name, x = meanhorizslow)) +
+  geom_col() +
+  theme_minimal()
+
+fastmove %>%
+  ggplot(aes(y = pitch_name, x = meanhorizfast)) +
+  geom_col() +
+  theme_minimal()
+```
+
+# Problem - no split fingers among top 25 slow pitchers. maybe expand to 50?
+
+# DO SAME ANALYSIS AS ABOVE WITH FULL SEASON DATA
+
+
+
+## Or could do scatterplot of all fast and all slow datasets - showing every oberservation with vert on y axis and horiz on x axis with color/shape representing bat speed (or maybe faceted by bat speed)
+
+
+
+# R Squared Analysis
+
+```{r}
+correlations <- suppressWarnings(cor(pitcherdata %>% select(where(is.numeric))))
+
+# Extract correlations with y
+y_correlations <- correlations["avg_swing_speed",]
+
+variables_to_remove <- c("year","player_id","ab","avg_swing_speed") # Replace with your variable names
+
+# Remove specified variables from y_correlations
+y_correlations <- y_correlations[names(y_correlations) %in% variables_to_remove == FALSE]
+
+# Sort correlations
+y_correlations <- sort(y_correlations, decreasing = TRUE)
+
+print(y_correlations)
+```
 
 
 # Data Context
@@ -225,6 +323,8 @@ grid.arrange(slowdiffplot, fastdiffplot, nrow = 2)
 Our data was collected using Statcast, by CSAS (Connecticut Sports Analytics) to analyze pitcher-batter interactions in MLB. Every MLB ballpark is equipped with Statcast tracking technology, which is used to acquire the data. See this link [statcastlink](https://www.mlb.com/glossary/statcast) for more background on Statcast. It contains data on 346,250 Major League Baseball plate appearances from 4/2/2024 to 6/30/2024 (first half of the 2024 regular season), as well as 94 different variables.
 
 Link to player ID data: [playerdatalink](https://www.smartfantasybaseball.com/tools/)
+
+Cumulative season data created through custom Baseball Savant Leaderboard: [savantlink](https://baseballsavant.mlb.com/leaderboard/custom?year=2024&type=pitcher&filter=&min=q&selections=ab%2Ck_percent%2Cp_era%2Cavg_swing_speed%2Cfast_swing_rate%2Cavg_swing_length%2Cswords%2Cexit_velocity_avg%2Cbarrel_batted_rate%2Chard_hit_percent%2Cwhiff_percent%2Cf_strike_percent%2Carm_angle%2Cn_fastball_formatted%2Cfastball_avg_speed%2Cfastball_avg_spin%2Cfastball_avg_break%2Cfastball_range_speed%2Cn_breaking_formatted%2Cbreaking_avg_speed%2Cbreaking_avg_spin%2Cbreaking_avg_break%2Cbreaking_range_speed%2Cn_offspeed_formatted%2Coffspeed_avg_speed%2Coffspeed_avg_spin%2Coffspeed_avg_break%2Coffspeed_range_speed&chart=false&x=ab&y=ab&r=no&chartType=beeswarm&sort=p_era&sortDir=desc)
 
 ## Data Codebook
 
