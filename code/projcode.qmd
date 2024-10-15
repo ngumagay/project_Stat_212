@@ -25,6 +25,7 @@ pitcherdata <- read_csv("../data/pitcher_data.csv")
 playerdataclean <- playerdata %>%
   select(PLAYERNAME, LASTNAME, MLBID, THROWS)
 ```
+
 ```{r}
 # Data cleaning including selecting relevant variables that might be useful in our analysis, joining datasets to include pitcher's names in our main dataset, and filtering out any data points that are NA for bat_speed and swing_length (since we will rely heavily on these variables for our analysis), as well as any data points that don't involve any swing being made(takes, hit by pitches, bunts, etc.)
 
@@ -75,6 +76,7 @@ baseballdataclean2 %>%
   labs(title = "Relationship Between Bat Speed and Swing Length") +
   theme_minimal()
 ```
+
 ```{r}
 pitcherdata %>%
   ggplot(aes(x = fast_swing_rate, y = hard_hit_percent)) +
@@ -93,6 +95,7 @@ pitcherdata %>%
   theme_minimal() +
   labs(title = "Relationship Between Average Swing Speed Against and Pitcher ERA (Qualified)")
 ```
+
 ```{r}
 pitcherdata %>%
   ggplot(aes(x = hard_hit_percent, y = p_era)) +
@@ -101,8 +104,8 @@ pitcherdata %>%
   theme_minimal() +
   labs(title = "Relationship Between Hard Hit Rate and Pitcher ERA")
 ```
-# THE FOLLOWING ANALYSIS USES THE DATASET FROM THE FIRST HALF OF THE 2024 SEASON
 
+# THE FOLLOWING ANALYSIS USES THE DATASET FROM THE FIRST HALF OF THE 2024 SEASON
 
 ```{r}
 # Generating a dataset of the 25 pitchers that batters swing the fastest against, arranged by their average bat speed against with a count of their number of data points
@@ -125,6 +128,7 @@ top25fast
 
 
 ```
+
 ```{r}
 # Calculating average spin rate by pitch type for the top 25 pitchers with the highest average swing speed against
 
@@ -137,6 +141,7 @@ fastspins <- top25allfast %>%
 
 fastspins
 ```
+
 ```{r}
 # Generating a dataset of the top 25 pitchers who generate the slowest bat speeds against, arranged by their average bat speed against with a count of their number of data points
 
@@ -156,6 +161,7 @@ top25slow <- pitcherslowswing2 %>%
 
 top25slow
 ```
+
 ```{r}
 # Calculating average spin rate by pitch type for the top 25 pitchers with the lowest average swing speed against
 
@@ -168,6 +174,7 @@ slowspins <- top25allslow %>%
 
 slowspins
 ```
+
 ```{r}
 # Showing Spin difference on average between pitchers who generate slow bat speeds vs pitchers who generate fast bat speeds
 
@@ -178,6 +185,7 @@ spindiff <- fastspins %>%
 
 spindiff
 ```
+
 ```{r}
 spindiff %>%
   ggplot() +
@@ -186,6 +194,7 @@ spindiff %>%
   theme_minimal() +
   labs(title = "Average Spin Rate Difference: Pitchers With Fast vs Slow Bat Speeds Against", caption = "Calculation: spin of pitchers with slow bat speeds against - spin of pitchers with fast bat speeds against", x = "Pitch Type", y = "Difference In Average Spin Rate")
 ```
+
 ```{r}
 slowvelo <- top25allslow %>%
   group_by(pitch_name) %>%
@@ -193,6 +202,7 @@ slowvelo <- top25allslow %>%
 
 slowvelo
 ```
+
 ```{r}
 fastvelo <- top25allfast %>%
   group_by(pitch_name) %>%
@@ -200,6 +210,7 @@ fastvelo <- top25allfast %>%
 
 fastvelo
 ```
+
 ```{r}
 velodiff <- fastvelo %>%
   left_join(slowvelo, by = c("pitch_name" = "pitch_name")) %>%
@@ -207,6 +218,7 @@ velodiff <- fastvelo %>%
 
 velodiff
 ```
+
 ```{r}
 velodiff %>%
   ggplot() +
@@ -215,6 +227,7 @@ velodiff %>%
   theme_minimal() +
   labs(title = "Average Velocity Difference: Pitchers With Fast vs Slow Bat Speeds Against", caption = "Calculation: velo of pitchers with slow bat speeds against - velo of pitchers with fast bat speeds against", x = "Pitch Type", y = "Avg Velo Difference")
 ```
+
 ```{r}
 slowdiff <- top25allslow %>%
   group_by(pitch_name) %>%
@@ -230,6 +243,7 @@ slowdiffplot <- slowdiff %>%
   scale_fill_gradient(low = "lightgreen", high = 'darkgreen') +
   theme_minimal()
 ```
+
 ```{r}
 fastdiff <- top25allfast %>%
   group_by(pitch_name) %>%
@@ -245,6 +259,7 @@ fastdiffplot <- fastdiff %>%
   scale_fill_gradient(low = "orange", high = 'red') +
   theme_minimal()
 ```
+
 ```{r}
 library(gridExtra)
 
@@ -258,6 +273,7 @@ slowmove <- top25allslow %>%
 
 slowmove
 ```
+
 ```{r}
 fastmove <- top25allfast %>%
   group_by(pitch_name) %>%
@@ -265,6 +281,7 @@ fastmove <- top25allfast %>%
 
 fastmove
 ```
+
 ```{r}
 slowmove %>%
   ggplot(aes(x = pitch_name, y = meanvertslow)) +
@@ -276,6 +293,7 @@ fastmove %>%
   geom_col() +
   theme_minimal()
 ```
+
 ```{r}
 slowmove %>%
   ggplot(aes(y = pitch_name, x = meanhorizslow)) +
@@ -292,11 +310,7 @@ fastmove %>%
 
 # DO SAME ANALYSIS AS ABOVE WITH FULL SEASON DATA
 
-
-
 ## Or could do scatterplot of all fast and all slow datasets - showing every oberservation with vert on y axis and horiz on x axis with color/shape representing bat speed (or maybe faceted by bat speed)
-
-
 
 # R Squared Analysis
 
@@ -316,7 +330,6 @@ y_correlations <- sort(y_correlations, decreasing = TRUE)
 
 print(y_correlations)
 ```
-
 
 # Data Context
 
