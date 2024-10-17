@@ -355,8 +355,13 @@ The effect of pitchers on batters' swing speeds and swing lengths
 
 3.  If pitchers do affect a batter's swing speed/length, what is the cause of this? Is it pitch speed, pitch movement, or something else?
 
-# Plan
+# Plan to Further Explore Questions
 
-With this data, we can address all of the above questions individually:
+We plan to improve the visualizations we have already created, as well as create more visualizations that explore the batter/pitcher interaction. We found another dataset as suggested in our Milestone 1 Feedback, and we would like to better integrate this additional dataset into our analysis. We would also like to have a concrete answer to our third broad question, and begin interpreting our results.
 
-To address these questions, we would need pitch speed, pitch movement, pitch spin, swing speed, swing length, pitcher name. Our dataset has variables that correspond to each of these measurements. Roughly, we would start by grouping by pitcher and analyzing their average pitch movements, spins, and velocities. Then, we would analyze batters' swing speeds and lengths, and filter to only look at instances when their swing speeds/lengths are unusually low or high. Then we could explore this further by looking for correlations between pitcher data and the observed unusual values for swing speed/length, while comparing to the individual hitters' average swing statistics.
+
+
+```{r}
+sessionInfo()
+```
+
