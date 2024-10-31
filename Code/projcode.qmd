@@ -1,10 +1,10 @@
 ---
-title: "Project Milestone 1"
+title: "Project Milestone 2"
 author: "Peter Ward, Hayes Waddell, Nathan Gumagay"
-format: html
-editor: visual
+format: 
+  html:
+    embed-resources: true
 ---
-
 # Read in Data and Data Cleaning
 
 ```{r}
@@ -27,7 +27,7 @@ playerdataclean <- playerdata %>%
 ```
 
 ```{r}
-# Data cleaning including selecting relevant variables that might be useful in our analysis, joining datasets to include pitcher's names in our main dataset, and filtering out any data points that are NA for bat_speed and swing_length (since we will rely heavily on these variables for our analysis), as well as any data points that don't involve any swing being made(takes, hit by pitches, bunts, etc.)
+# Data cleaning including selecting relevant variables that might be useful in our analysis, joining datasets to include pitcher's names in our main dataset, and filtering out any data points that are NA for bat_speed and swing_length (since we will rely heavily on these variables for our analysis), as well as any data points that don't involve any swing being made(takes, hit by pitches, bunts, etc.) 
 
 baseballdataclean <- baseballdata %>%
   select(game_date, release_speed, player_name, events, zone, stand, bb_type, balls, strikes, pfx_x, pfx_z, outs_when_up, inning, hit_distance_sc, launch_angle, launch_speed, effective_speed, release_spin_rate, launch_speed_angle, estimated_ba_using_speedangle, estimated_woba_using_speedangle, woba_value, bat_score, fld_score, pitch_name, pitcher, bat_speed, swing_length, description)
@@ -82,7 +82,7 @@ pitcherdata %>%
   ggplot(aes(x = fast_swing_rate, y = hard_hit_percent)) +
   geom_point() +
   geom_smooth(method = 'lm') +
-  labs(title = "Relationship Between Hard hit rate and Average Swing Speed (Qualified)") +
+  labs(title = "Relationship Between Fast Swing Rate and Average Swing Speed (Qualified)") +
   theme_minimal()
 ```
 
@@ -93,7 +93,7 @@ pitcherdata %>%
   geom_point() +
   geom_smooth(method = 'lm') +
   theme_minimal() +
-  labs(title = "Relationship Between Average Swing Speed Against and Pitcher ERA (Qualified)")
+  labs(title = "Relationship Between Fast Swing Rate and Pitcher ERA (Qualified)")
 ```
 
 ```{r}
@@ -153,7 +153,7 @@ pitcheraverageslow <- baseballdataclean2 %>%
 pitcheraverageslow
 
 pitcherslowswing2 <- pitcheraverageslow %>%
-  filter(n >= 10)
+  filter(n >= 20)
 
 top25slow <- pitcherslowswing2 %>%
   arrange(avg_bat_speed) %>%
@@ -214,7 +214,8 @@ fastvelo
 ```{r}
 velodiff <- fastvelo %>%
   left_join(slowvelo, by = c("pitch_name" = "pitch_name")) %>%
-  mutate(velodiff = meanveloslow - meanvelofast)
+  mutate(velodiff = meanveloslow - meanvelofast) %>% 
+  filter(pitch_name != 'Split-Finger')
 
 velodiff
 ```
@@ -248,7 +249,8 @@ slowdiffplot <- slowdiff %>%
 fastdiff <- top25allfast %>%
   group_by(pitch_name) %>%
   summarize(meanvelofast = mean(release_speed, na.rm = TRUE), meanpercfast = mean(effective_speed, na.rm = TRUE)) %>%
-  mutate(fastdiffspeed = meanpercfast - meanvelofast)
+  mutate(fastdiffspeed = meanpercfast - meanvelofast) %>%
+  filter(pitch_name != 'Split-Finger')
 
 fastdiff
 
@@ -277,7 +279,8 @@ slowmove
 ```{r}
 fastmove <- top25allfast %>%
   group_by(pitch_name) %>%
-  summarize(meanvertfast = mean(pfx_z, na.rm = TRUE), meanhorizfast = mean(pfx_x, na.rm = TRUE))
+  summarize(meanvertfast = mean(pfx_z, na.rm = TRUE), meanhorizfast = mean(pfx_x, na.rm = TRUE)) %>%
+  filter(pitch_name != 'Split-Finger')
 
 fastmove
 ```
@@ -306,11 +309,25 @@ fastmove %>%
   theme_minimal()
 ```
 
-# Problem - no split fingers among top 25 slow pitchers. maybe expand to 50?
-
 # DO SAME ANALYSIS AS ABOVE WITH FULL SEASON DATA
 
 ## Or could do scatterplot of all fast and all slow datasets - showing every oberservation with vert on y axis and horiz on x axis with color/shape representing bat speed (or maybe faceted by bat speed)
+
+
+```{r}
+alltop50 <- top25allslow %>%
+  full_join(top25allfast)
+
+top50summary <- alltop50 %>%
+  group_by(PLAYERNAME) %>%
+  summarize(meanmovex = mean(pfx_x), meanmovez = mean(pfx_z), meanbatspeed = mean(bat_speed))
+
+top50summary%>%
+  ggplot(aes(x = meanmovex, y = meanmovez, color = meanbatspeed)) +
+  geom_point(size = 2) +
+  theme_minimal()
+```
+
 
 # R Squared Analysis
 
@@ -331,13 +348,31 @@ y_correlations <- sort(y_correlations, decreasing = TRUE)
 print(y_correlations)
 ```
 
+```{r}
+library(reshape2)
+
+heatmap_data <- top25allslow %>%
+  group_by(PLAYERNAME, pitch_name) %>%
+  summarize(mean_swing_speed = mean(bat_speed)) %>%
+  spread(pitch_name, mean_swing_speed)
+
+heatmap_melted <- heatmap_data %>%
+  pivot_longer(-PLAYERNAME, names_to = "pitch_name", values_to = "mean_swing_speed")
+
+ggplot(heatmap_melted, aes(x = PLAYERNAME, y = pitch_name, fill = mean_swing_speed)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = "Pitchers vs Swing Speeds Heatmap")
+```
+
 # Data Context
 
 Our data was collected using Statcast, by CSAS (Connecticut Sports Analytics) to analyze pitcher-batter interactions in MLB. Every MLB ballpark is equipped with Statcast tracking technology, which is used to acquire the data. See this link [statcastlink](https://www.mlb.com/glossary/statcast) for more background on Statcast. It contains data on 346,250 Major League Baseball plate appearances from 4/2/2024 to 6/30/2024 (first half of the 2024 regular season), as well as 94 different variables.
 
 Link to player ID data: [playerdatalink](https://www.smartfantasybaseball.com/tools/)
 
-Cumulative season data created through custom Baseball Savant Leaderboard: [savantlink](https://baseballsavant.mlb.com/leaderboard/custom?year=2024&type=pitcher&filter=&min=q&selections=ab%2Ck_percent%2Cp_era%2Cavg_swing_speed%2Cfast_swing_rate%2Cavg_swing_length%2Cswords%2Cexit_velocity_avg%2Cbarrel_batted_rate%2Chard_hit_percent%2Cwhiff_percent%2Cf_strike_percent%2Carm_angle%2Cn_fastball_formatted%2Cfastball_avg_speed%2Cfastball_avg_spin%2Cfastball_avg_break%2Cfastball_range_speed%2Cn_breaking_formatted%2Cbreaking_avg_speed%2Cbreaking_avg_spin%2Cbreaking_avg_break%2Cbreaking_range_speed%2Cn_offspeed_formatted%2Coffspeed_avg_speed%2Coffspeed_avg_spin%2Coffspeed_avg_break%2Coffspeed_range_speed&chart=false&x=ab&y=ab&r=no&chartType=beeswarm&sort=p_era&sortDir=desc)
+Cumulative season data created through custom Baseball Savant Leaderboard: [savantlink](https://baseballsavant.mlb.com/leaderboard/custom?year=2024&type=pitcher&filter=&min=250&selections=pa%2Ck_percent%2Cp_era%2Cavg_swing_speed%2Cfast_swing_rate%2Cavg_swing_length%2Cswords%2Cexit_velocity_avg%2Cbarrel_batted_rate%2Chard_hit_percent%2Cout_zone_percent%2Cin_zone_percent%2Cwhiff_percent%2Cf_strike_percent%2Carm_angle%2Cn_fastball_formatted%2Cfastball_avg_speed%2Cfastball_avg_spin%2Cfastball_avg_break_x%2Cfastball_avg_break_z%2Cfastball_avg_break%2Cn_breaking_formatted%2Cbreaking_avg_speed%2Cbreaking_avg_spin%2Cbreaking_avg_break_x%2Cbreaking_avg_break_z%2Cbreaking_avg_break%2Cn_offspeed_formatted%2Coffspeed_avg_speed%2Coffspeed_avg_spin%2Coffspeed_avg_break_x%2Coffspeed_avg_break_z%2Coffspeed_avg_break&chart=false&x=pa&y=pa&r=no&chartType=beeswarm&sort=pa&sortDir=asc)
 
 ## Data Codebook
 

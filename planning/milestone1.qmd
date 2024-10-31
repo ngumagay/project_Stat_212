@@ -1,0 +1,38 @@
+---
+title: "Project Milestone 1"
+author: "Peter Ward, Hayes Waddell, Nathan Gumagay"
+format: 
+  html:
+    embed-resources: true
+---
+
+# Read in Data
+
+```{r}
+library(readr)
+baseballdata <- read_csv("../data/swing_data.csv")
+```
+
+# Data Context
+
+Our data was collected using Statcast, by CSAS (Connecticut Sports Analytics) to analyze pitcher-batter interactions in MLB. Every MLB ballpark is equipped with Statcast tracking technology, which is used to acquire the data. See this link [statcastlink](https://www.mlb.com/glossary/statcast) for more background on Statcast. It contains data on 346,250 Major League Baseball plate appearances from 4/2/2024 to 6/30/2024 (first half of the 2024 regular season), as well as 94 different variables.
+
+Link to player ID data: [playerdatalink](https://www.smartfantasybaseball.com/tools/)
+
+Cumulative season data created through custom Baseball Savant Leaderboard: [savantlink](https://baseballsavant.mlb.com/leaderboard/custom?year=2024&type=pitcher&filter=&min=250&selections=pa%2Ck_percent%2Cp_era%2Cavg_swing_speed%2Cfast_swing_rate%2Cavg_swing_length%2Cswords%2Cexit_velocity_avg%2Cbarrel_batted_rate%2Chard_hit_percent%2Cout_zone_percent%2Cin_zone_percent%2Cwhiff_percent%2Cf_strike_percent%2Carm_angle%2Cn_fastball_formatted%2Cfastball_avg_speed%2Cfastball_avg_spin%2Cfastball_avg_break_x%2Cfastball_avg_break_z%2Cfastball_avg_break%2Cn_breaking_formatted%2Cbreaking_avg_speed%2Cbreaking_avg_spin%2Cbreaking_avg_break_x%2Cbreaking_avg_break_z%2Cbreaking_avg_break%2Cn_offspeed_formatted%2Coffspeed_avg_speed%2Coffspeed_avg_spin%2Coffspeed_avg_break_x%2Coffspeed_avg_break_z%2Coffspeed_avg_break&chart=false&x=pa&y=pa&r=no&chartType=beeswarm&sort=pa&sortDir=asc)
+
+## Data Codebook
+
+The codebook for our data can be found at this link: [codebooklink](https://baseballsavant.mlb.com/csv-docs)
+
+# Project Topic
+
+The effect of pitchers on batters' swing speeds and swing lengths
+
+# Questions We Wish To Explore
+
+1.  Do pitchers modify batters' behavior? That is do batters' swing speeds differ depending on something pitchers do?
+
+2.  Do some pitchers elicit different swing speeds and swing lengths than others? That is, are some pitchers better at slowing down batters' swing speeds or making their swings longer?
+
+3.  If pitchers do affect a batter's swing speed/length, what is the cause of this? Is it pitch speed, pitch movement, or something else?
