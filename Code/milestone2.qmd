@@ -402,3 +402,6 @@ We plan to improve the visualizations we have already created, as well as create
 sessionInfo()
 ```
 
+
+
+# Create new variable indicating whether a players bat speed was slower or faster than their average, and then use it for analyis like above
