@@ -5,6 +5,7 @@ format:
   html:
     embed-resources: true
 ---
+
 # Read in Data and Data Cleaning
 
 ```{r}
@@ -313,7 +314,6 @@ fastmove %>%
 
 ## Or could do scatterplot of all fast and all slow datasets - showing every oberservation with vert on y axis and horiz on x axis with color/shape representing bat speed (or maybe faceted by bat speed)
 
-
 ```{r}
 alltop50 <- top25allslow %>%
   full_join(top25allfast)
@@ -327,7 +327,6 @@ top50summary%>%
   geom_point(size = 2) +
   theme_minimal()
 ```
-
 
 # R Squared Analysis
 
@@ -394,9 +393,6 @@ The effect of pitchers on batters' swing speeds and swing lengths
 
 We plan to improve the visualizations we have already created, as well as create more visualizations that explore the batter/pitcher interaction. We found another dataset as suggested in our Milestone 1 Feedback, and we would like to better integrate this additional dataset into our analysis. We would also like to have a concrete answer to our third broad question, and begin interpreting our results.
 
-
-
 ```{r}
 sessionInfo()
 ```
-
