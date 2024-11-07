@@ -134,6 +134,9 @@ baseballdatacleanqual <- baseballdatacleanqual %>%
 baseballdatacleanqual <- baseballdatacleanqual %>%
   mutate(batspeeddiff = bat_speed - meanbatspeed)
 
+baseballdatacleanqual <- baseballdatacleanqual %>%
+  mutate(fasterthanavg = if_else(bat_speed > meanbatspeed, TRUE, FALSE))
+
 fastavgagainst <- baseballdatacleanqual %>%
   group_by(PLAYERNAME) %>%
   summarize(avgbatspeeddiff = mean(batspeeddiff, na.rm = TRUE)) %>%
@@ -287,84 +290,99 @@ allvert2 %>%
   labs(x = "Pitch Type", y = "Vertical Break (inches)", title = "Mean Vertical Break Comparison by Pitch Type", fill = "Bat Speed Against", caption = "Takeaway: Pitchers With Slow Bat Speed Against: Less Vertical Break on Every Pitch Except Splitter")
 ```
 ```{r}
-pitchermeanbatspeeds %>%
-  ggplot(aes(x = meanbatspeedagainst)) +
+baseballdatacleanqual %>%
+  ggplot(aes(x = bat_speed)) +
   geom_histogram() +
   theme_minimal()
 ```
+# Do the above with like 5 specific pitchers to show evidence of variation (could also do boxplots)
 
-
-
+# This is one visualization we could present
 
 ```{r}
 all50against <- fastavgagainst %>%
   full_join(slowavgagainst)
 
+baseballdatacleanqual %>%
+  ungroup() %>%
+  summarize(mean(batspeeddiff))
+
 all50against %>%
   ggplot(aes(x = reorder(PLAYERNAME, -avgbatspeeddiff), y = avgbatspeeddiff)) +
-  geom_col() +
-  labs(x = "Pitcher Name", y = "Avg Bat Speed Difference Against") +
+  geom_col(aes(fill = avgbatspeeddiff > 0)) +  # Conditional color fill based on avgbatspeeddiff > 0
+  geom_hline(yintercept = -1.465536e-16, color = 'blue', size = 1.5) +
+  labs(x = "Pitcher Name", y = "Avg Speed Difference", title = "Average Bat Speed Difference Against Compared to Batter Mean Bat Speed", caption = "Blue line Indicates average bat speed differential") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("red", "darkgreen"), name = "Bat Speed Difference", labels = c("Below Average", "Above Average"))  # Red for below 0, green for above
+```
+```{r}
+vars <- c("pfx_x","pfx_z","release_speed","speeddiff","release_spin_rate")
+# Overall Averages
+baseballdatacleanqual %>%
+  ungroup() %>%
+  group_by(pitch_name) %>%
+  summarize(across(vars, ~mean(. , na.rm = TRUE))) %>%
+  filter(pitch_name == "4 Seam" | pitch_name == "Changeup" | pitch_name == "Curveball" | pitch_name == "K Curve" | pitch_name == "Sinker" | pitch_name == "Slider" | pitch_name == "Sweeper" | pitch_name == "Cutter" | pitch_name == "Splitter")
+
+# Averages When Hitters Swing SLOWER than their average swing speed
+baseballdatacleanqual %>%
+  filter(fasterthanavg == FALSE) %>%
+  ungroup() %>%
+  group_by(pitch_name) %>%
+  summarize(across(vars, ~mean(. , na.rm = TRUE))) %>%
+  filter(pitch_name == "4 Seam" | pitch_name == "Changeup" | pitch_name == "Curveball" | pitch_name == "K Curve" | pitch_name == "Sinker" | pitch_name == "Slider" | pitch_name == "Sweeper" | pitch_name == "Cutter" | pitch_name == "Splitter")
+
+# Averages When Hitters Swing FASTER than their average swing speed
+baseballdatacleanqual %>%
+  filter(fasterthanavg == TRUE) %>%
+  ungroup() %>%
+  group_by(pitch_name) %>%
+  summarize(across(vars, ~mean(. , na.rm = TRUE))) %>%
+  filter(pitch_name == "4 Seam" | pitch_name == "Changeup" | pitch_name == "Curveball" | pitch_name == "K Curve" | pitch_name == "Sinker" | pitch_name == "Slider" | pitch_name == "Sweeper" | pitch_name == "Cutter" | pitch_name == "Splitter")
 ```
 
-
-
 ```{r}
-# Generating a dataset of the 25 pitchers that batters swing the fastest against, arranged by their average bat speed against with a count of their number of data points
+# Overall Averages
+baseballdatacleanqual %>%
+  ungroup() %>%
+  summarize(across(vars, ~mean(. , na.rm = TRUE)))
 
-pitcheraverage <- baseballdataclean2 %>%
-  group_by(PLAYERNAME) %>%
-  summarize(avg_bat_speed = mean(bat_speed), n = n()) %>%
-  arrange(desc(avg_bat_speed))
+# Averages When Hitters Swing SLOWER than their average swing speed
+baseballdatacleanqual %>%
+  filter(fasterthanavg == FALSE) %>%
+  ungroup() %>%
+  summarize(across(vars, ~mean(. , na.rm = TRUE)))
 
-pitcherfastswing2 <- pitcheraverage %>%
-  filter(n >= 20)
-
-top25fast <- pitcherfastswing2 %>%
-  arrange(desc(avg_bat_speed)) %>%
-  head(25)
-
-top25fast
-
-
+# Averages When Hitters Swing FASTER than their average swing speed
+baseballdatacleanqual %>%
+  filter(fasterthanavg == TRUE) %>%
+  ungroup() %>%
+  summarize(across(vars, ~mean(. , na.rm = TRUE)))
 ```
 
 ```{r}
-# Generating a dataset of the top 25 pitchers who generate the slowest bat speeds against, arranged by their average bat speed against with a count of their number of data points
-
-pitcheraverageslow <- baseballdataclean2 %>%
-  group_by(PLAYERNAME) %>%
-  summarize(avg_bat_speed = mean(bat_speed), n = n()) %>%
-  arrange(avg_bat_speed)
-
-pitcherslowswing2 <- pitcheraverageslow %>%
-  filter(n >= 20)
-
-top25slow <- pitcherslowswing2 %>%
-  arrange(avg_bat_speed) %>%
-  head(25)
-
-top25slow
+library(GGally)
+ggpairs(pitcherdata, columns = c("fastball_avg_speed", "fastball_avg_spin", "fastball_avg_break_x", "fastball_avg_break_z","n_fastball_formatted", "avg_swing_speed"))
 ```
 
-
-# DO SAME ANALYSIS AS ABOVE WITH FULL SEASON DATA
-
-
-
 ```{r}
-alltop50 <- top25allslow %>%
-  full_join(top25allfast)
+slowerpitchcount <- baseballdatacleanqual %>%
+  filter(fasterthanavg == FALSE) %>%
+  ungroup() %>%
+  group_by(pitch_name) %>%
+  summarize(slowerbatspeed = n())
 
-top50summary <- alltop50 %>%
-  group_by(PLAYERNAME) %>%
-  summarize(meanmovex = mean(pfx_x), meanmovez = mean(pfx_z), meanbatspeed = mean(bat_speed))
+totalpitchcount <- baseballdatacleanqual %>%
+  ungroup() %>%
+  group_by(pitch_name) %>%
+  summarize(totalpitches = n())
 
-top50summary%>%
-  ggplot(aes(x = meanmovex, y = meanmovez, color = meanbatspeed)) +
-  geom_point(size = 2) +
-  theme_minimal()
+slowerpitchcount %>%
+  full_join(totalpitchcount) %>%
+  filter(pitch_name != "Forkball" & pitch_name != "Knuckleball" & pitch_name != "Slurve" & pitch_name != "Slow Curve") %>%
+  mutate(propslowerbat = slowerbatspeed / totalpitches) %>%
+  arrange(desc(propslowerbat))
 ```
 
 
