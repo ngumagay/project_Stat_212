@@ -1,0 +1,149 @@
+
+
+```{r}
+# Reading in our player name and player data datasets
+
+library(readr)
+library(tidyverse)
+# Data from first half of 2024 season for every player
+baseballdata <- read_csv("../data/swing_data.csv")
+
+# Pitcher name data
+playerdata <- read_csv("../data/player_data.csv")
+
+# Data from entire 2024 season, only containing qualified pitchers
+pitcherdata <- read_csv("../data/pitcher_data.csv")
+
+# Choosing relevant variables from name dataset
+playerdataclean <- playerdata %>%
+  select(PLAYERNAME, LASTNAME, MLBID, THROWS)
+```
+
+```{r}
+baseballdataclean <- baseballdata %>%
+  select(game_date, release_speed, player_name, events, zone, stand, bb_type, balls, strikes, pfx_x, pfx_z, outs_when_up, inning, hit_distance_sc, launch_angle, launch_speed, effective_speed, release_spin_rate, launch_speed_angle, estimated_ba_using_speedangle, estimated_woba_using_speedangle, woba_value, bat_score, fld_score, pitch_name, pitcher, bat_speed, swing_length, description)
+
+baseballdataclean2 <- baseballdataclean %>% 
+  left_join(playerdataclean, by = c("pitcher" = "MLBID"))
+
+baseballdataclean2 <- baseballdataclean2 %>%
+  mutate(pitch_name = recode(pitch_name, "4-Seam Fastball" = "4 Seam"))
+
+baseballdataclean2 <- baseballdataclean2 %>%
+  filter(bat_speed != 'NA') %>%
+  filter(swing_length != 'NA') %>%
+  filter(!description %in% c("ball", "called_strike", "blocked_ball", "pitchout", "hit_by_pitch", "foul_bunt","missed_bunt", "bunt_foul_tip"))
+
+baseballdataclean2 <- baseballdataclean2 %>%
+  filter(launch_speed != 'NA') %>%
+  mutate(teamwinning = ifelse(bat_score > fld_score, TRUE, FALSE)) %>%
+  mutate(sameside = ifelse(THROWS == stand, TRUE, FALSE)) %>%
+  group_by(PLAYERNAME) %>%
+  mutate(n = n())
+
+# Calculate means for each numeric variable
+mean_summary <- baseballdataclean2 %>%
+  filter(n > 50) %>%
+  group_by(PLAYERNAME) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
+  
+```
+```{r}
+era_pitcher <- mean_summary %>%
+  left_join(pitcherdata %>% select(player_id, p_era, k_percent, barrel_batted_rate), by = c("pitcher" = "player_id")) %>%
+  filter(!is.na(p_era))
+```
+
+```{r}
+#Linear Models of Scatter Plots
+exit_velo <- lm(launch_speed ~ bat_speed, data = era_pitcher)
+r_squared <- summary(exit_velo)$r.squared
+p_value <- summary(exit_velo)$coefficients[2, 4]
+
+era <- lm(p_era ~ bat_speed, data = era_pitcher)
+r_squared <- summary(era)$r.squared
+p_value <- summary(era)$coefficients[2, 4]
+
+k_p <- lm(k_percent ~ bat_speed, data = era_pitcher)
+r_squared <- summary(k_p)$r.squared
+p_value <- summary(k_p)$coefficients[2, 4]
+
+barrel <- lm(barrel_batted_rate ~ bat_speed, data = era_pitcher)
+r_squared <- summary(barrel)$r.squared
+p_value <- summary(barrel)$coefficients[2, 4]
+```
+
+
+
+
+```{r}
+plot1 <- ggplot(era_pitcher, aes(x = bat_speed, y = launch_speed)) +
+  geom_point(size = 1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Average Bat Speed Against (MPH)", y = "Average Exit Velocity Allowed(MPH)") +
+  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared, 3), "\np = ", signif(p_value, 3)),
+           hjust = 1.0, vjust = 1.3, size = 3, color = "blue") +
+  theme_classic()+
+  theme(
+    axis.title.x = element_text(size = 7), 
+    axis.title.y = element_text(size = 7)
+  )
+
+```
+
+```{r}
+plot2 <- ggplot(era_pitcher, aes(x = bat_speed, y = p_era)) +
+  geom_point(size = 1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Average Bat Speed Against (MPH)", y = "Earned Run Average") +
+  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared, 3), "\np = ", signif(p_value, 3)),
+           hjust = 1.1, vjust = 1.1, size = 3, color = "blue") +
+  theme_classic()+
+  theme(
+    axis.title.x = element_text(size = 7), 
+    axis.title.y = element_text(size = 7)
+  )
+
+```
+```{r}
+plot3 <- ggplot(era_pitcher, aes(x = bat_speed, y = k_percent)) +
+  geom_point(size = 1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Average Bat Speed Against (MPH)", y = "Strikeout Percent (K/AB)") +
+  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared, 3), "\np = ", signif(p_value, 3)),
+           hjust = 1.1, vjust = 1.1, size = 3, color = "blue") +
+  theme_classic() +
+  theme(
+    axis.title.x = element_text(size = 7), 
+    axis.title.y = element_text(size = 7)
+  )
+
+```
+
+
+```{r}
+plot4 <- ggplot(era_pitcher, aes(x = bat_speed, y = barrel_batted_rate)) +
+  geom_point(size = 1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Average Bat Speed Against (MPH)", y = "Barrel Rate (%)") +
+  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared, 3), "\np = ", signif(p_value, 3)),
+           hjust = 1.0, vjust = 1.0, size = 3, color = "blue") +
+  theme_classic()+ 
+  theme(
+    axis.title.x = element_text(size = 7), 
+    axis.title.y = element_text(size = 7)
+  )
+```
+
+```{r}
+library(patchwork)
+
+
+bat_speed_correlations <- (plot1 | plot2) / (plot3 | plot4)
+
+
+bat_speed_correlations
+```
+
+
+
