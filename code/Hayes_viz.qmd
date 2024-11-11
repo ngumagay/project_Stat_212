@@ -57,20 +57,20 @@ era_pitcher <- mean_summary %>%
 ```{r}
 #Linear Models of Scatter Plots
 exit_velo <- lm(launch_speed ~ bat_speed, data = era_pitcher)
-r_squared <- summary(exit_velo)$r.squared
-p_value <- summary(exit_velo)$coefficients[2, 4]
+r_squared_ev <- summary(exit_velo)$r.squared
+p_value_ev <- summary(exit_velo)$coefficients[2, 4]
 
 era <- lm(p_era ~ bat_speed, data = era_pitcher)
-r_squared <- summary(era)$r.squared
-p_value <- summary(era)$coefficients[2, 4]
+r_squared_era <- summary(era)$r.squared
+p_value_era <- summary(era)$coefficients[2, 4]
 
 k_p <- lm(k_percent ~ bat_speed, data = era_pitcher)
-r_squared <- summary(k_p)$r.squared
-p_value <- summary(k_p)$coefficients[2, 4]
+r_squared_k <- summary(k_p)$r.squared
+p_value_k <- summary(k_p)$coefficients[2, 4]
 
 barrel <- lm(barrel_batted_rate ~ bat_speed, data = era_pitcher)
-r_squared <- summary(barrel)$r.squared
-p_value <- summary(barrel)$coefficients[2, 4]
+r_squared_b <- summary(barrel)$r.squared
+p_value_b <- summary(barrel)$coefficients[2, 4]
 ```
 
 
@@ -80,13 +80,14 @@ p_value <- summary(barrel)$coefficients[2, 4]
 plot1 <- ggplot(era_pitcher, aes(x = bat_speed, y = launch_speed)) +
   geom_point(size = 1) +
   geom_smooth(method = "lm", se = FALSE) +
-  labs(x = "Average Bat Speed Against (MPH)", y = "Average Exit Velocity Allowed(MPH)") +
-  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared, 3), "\np = ", signif(p_value, 3)),
-           hjust = 1.0, vjust = 1.3, size = 3, color = "blue") +
+  labs(y = "Average Exit Velocity Allowed(MPH)") +
+  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared_ev, 3), "\np = ", signif(p_value_ev, 3)),
+           hjust = 1.0, vjust = 1.4, size = 3, color = "blue") +
   theme_classic()+
   theme(
-    axis.title.x = element_text(size = 7), 
-    axis.title.y = element_text(size = 7)
+    axis.title.x = element_blank(), 
+    axis.title.y = element_text(size = 7),
+    
   )
 
 ```
@@ -95,13 +96,14 @@ plot1 <- ggplot(era_pitcher, aes(x = bat_speed, y = launch_speed)) +
 plot2 <- ggplot(era_pitcher, aes(x = bat_speed, y = p_era)) +
   geom_point(size = 1) +
   geom_smooth(method = "lm", se = FALSE) +
-  labs(x = "Average Bat Speed Against (MPH)", y = "Earned Run Average") +
-  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared, 3), "\np = ", signif(p_value, 3)),
+  labs(y = "Earned Run Average") +
+  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared_era, 3), "\np = ", signif(p_value_era, 3)),
            hjust = 1.1, vjust = 1.1, size = 3, color = "blue") +
   theme_classic()+
   theme(
-    axis.title.x = element_text(size = 7), 
-    axis.title.y = element_text(size = 7)
+    axis.title.x = element_blank(), 
+    axis.title.y = element_text(size = 7),
+    
   )
 
 ```
@@ -109,8 +111,8 @@ plot2 <- ggplot(era_pitcher, aes(x = bat_speed, y = p_era)) +
 plot3 <- ggplot(era_pitcher, aes(x = bat_speed, y = k_percent)) +
   geom_point(size = 1) +
   geom_smooth(method = "lm", se = FALSE) +
-  labs(x = "Average Bat Speed Against (MPH)", y = "Strikeout Percent (K/AB)") +
-  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared, 3), "\np = ", signif(p_value, 3)),
+  labs(x = "Average Bat Speed Against (MPH)", y = "Strikeout % (K/AB)") +
+  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared_k, 3), "\np = ", signif(p_value_k, 3)),
            hjust = 1.1, vjust = 1.1, size = 3, color = "blue") +
   theme_classic() +
   theme(
@@ -125,8 +127,8 @@ plot3 <- ggplot(era_pitcher, aes(x = bat_speed, y = k_percent)) +
 plot4 <- ggplot(era_pitcher, aes(x = bat_speed, y = barrel_batted_rate)) +
   geom_point(size = 1) +
   geom_smooth(method = "lm", se = FALSE) +
-  labs(x = "Average Bat Speed Against (MPH)", y = "Barrel Rate (%)") +
-  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared, 3), "\np = ", signif(p_value, 3)),
+  labs(x = "Average Bat Speed Against (MPH)", y = "Barrel Rate Against (%)") +
+  annotate("text", x = Inf, y = Inf, label = paste0("R² = ", round(r_squared_b, 3), "\np = ", signif(p_value_b, 3)),
            hjust = 1.0, vjust = 1.0, size = 3, color = "blue") +
   theme_classic()+ 
   theme(
