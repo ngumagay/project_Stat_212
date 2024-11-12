@@ -1,0 +1,98 @@
+---
+title: "Nathan's Viz"
+format: html
+editor: visual
+---
+
+
+
+
+```{r}
+# Reading in our player name and player data datasets
+
+library(readr)
+library(tidyverse)
+# Data from first half of 2024 season for every player
+baseballdata <- read_csv("../data/swing_data.csv")
+
+# Pitcher name data
+playerdata <- read_csv("../data/player_data.csv")
+
+# Data from entire 2024 season, only containing qualified pitchers
+pitcherdata <- read_csv("../data/pitcher_data.csv")
+
+# Choosing relevant variables from name dataset
+playerdataclean <- playerdata %>%
+  select(PLAYERNAME, LASTNAME, MLBID, THROWS)
+```
+
+
+```{r}
+# Data cleaning including selecting relevant variables that might be useful in our analysis, joining datasets to include pitcher's names in our main dataset, and filtering out any data points that are NA for bat_speed and swing_length (since we will rely heavily on these variables for our analysis), as well as any data points that don't involve any swing being made(takes, hit by pitches, bunts, etc.) 
+
+baseballdataclean <- baseballdata %>%
+  select(game_date, release_speed, player_name, events, zone, stand, bb_type, balls, strikes, pfx_x, pfx_z, outs_when_up, inning, hit_distance_sc, launch_angle, launch_speed, effective_speed, release_spin_rate, launch_speed_angle, estimated_ba_using_speedangle, estimated_woba_using_speedangle, woba_value, bat_score, fld_score, pitch_name, pitcher, bat_speed, swing_length, description)
+
+baseballdataclean2 <- baseballdataclean %>% 
+  left_join(playerdataclean, by = c("pitcher" = "MLBID"))
+
+baseballdataclean2 <- baseballdataclean2 %>%
+  mutate(pitch_name = recode(pitch_name, "4-Seam Fastball" = "4 Seam")) %>%
+  mutate(pitch_name = recode(pitch_name, "Knuckle Curve" = "K Curve")) %>%
+  mutate(pitch_name = recode(pitch_name, "Split-Finger" = "Splitter"))
+
+baseballdataclean2 <- baseballdataclean2 %>%
+  filter(bat_speed != 'NA') %>%
+  filter(swing_length != 'NA') %>%
+  filter(!description %in% c("ball", "called_strike", "blocked_ball", "pitchout", "hit_by_pitch", "foul_bunt","missed_bunt", "bunt_foul_tip"))
+
+baseballdataclean2 <- baseballdataclean2 %>%
+  filter(launch_speed != 'NA') %>%
+  filter(PLAYERNAME != 'NA') %>%
+  mutate(teamwinning = ifelse(bat_score > fld_score, TRUE, FALSE)) %>%
+  mutate(sameside = ifelse(THROWS == stand, TRUE, FALSE)) %>%
+  group_by(PLAYERNAME) %>%
+  dplyr::mutate(tot = n())
+
+baseballdatacleanqual <- baseballdataclean2 %>%
+  filter(tot > 50) %>%
+  mutate(speeddiff = effective_speed - release_speed)
+  
+```
+
+
+```{r}
+meanbatspeeds <- baseballdatacleanqual %>%
+  group_by(player_name) %>%
+  dplyr::summarize(meanbatspeed = mean(bat_speed, na.rm = TRUE))
+
+pitchermeanbatspeeds <- baseballdatacleanqual %>%
+  group_by(PLAYERNAME) %>%
+  dplyr::summarize(meanbatspeedagainst = mean(bat_speed, na.rm = TRUE))
+
+baseballdatacleanqual <- baseballdatacleanqual %>%
+  left_join(meanbatspeeds)
+```
+
+
+
+```{r}
+baseball_war <- baseballdatacleanqual %>%
+  filter(PLAYERNAME == "Tarik Skubal" | PLAYERNAME == "Hunter Greene" | PLAYERNAME == "Chris Sale" | PLAYERNAME == "Zack Wheeler" | PLAYERNAME =="Paul Skenes" | PLAYERNAME =="Erick Fedde" | PLAYERNAME =="Seth Lugo" | PLAYERNAME =="Reynaldo Lopez" | PLAYERNAME =="Cole Ragans" | PLAYERNAME =="Framber Valdez") %>%
+  filter(events != "sac_bunt")
+
+baseball_war <- baseball_war %>%
+  group_by(PLAYERNAME) %>%
+  dplyr::summarize(mean = mean(meanbatspeed))
+
+baseball_mean <- baseballdatacleanqual %>%
+  summarize(mean(meanbatspeed))
+```
+
+```{r}
+ggplot(data = baseball_war, aes(y = mean, x = PLAYERNAME, fill = PLAYERNAME)) +
+  geom_col() +
+  geom_hline(yintercept = 70.15831, color = "blue") +
+  scale_y_continuous(limits = c(0,80)) +
+  theme(axis.text.x = element_text(angle = 90))
+```
