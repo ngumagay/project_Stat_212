@@ -93,6 +93,12 @@ baseball_mean <- baseballdatacleanqual %>%
 ggplot(data = baseball_war, aes(y = mean, x = PLAYERNAME, fill = PLAYERNAME)) +
   geom_col() +
   geom_hline(yintercept = 70.15831, color = "blue") +
+  geom_text(y = 75, x = "Erick Fedde", label = "MLB Average Pitcher Bat Speed Against", alpha = 0.5, size = 2) +
+  geom_segment(aes(x = "Erick Fedde", y = 73, xend = "Erick Fedde", yend = 71), 
+               arrow = arrow(length = unit(0.1, "cm"))) +
   scale_y_continuous(limits = c(0,80)) +
-  theme(axis.text.x = element_text(angle = 90))
+  labs(title = "Pitcher's Average Bat Speed Against") +
+  xlab(label = "Top 10 Pitchers in MLB") +
+  ylab(label = "AVG Bat Speed Against") +
+  theme(axis.text.x = element_text(angle = 90), legend.position = "none")
 ```
