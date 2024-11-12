@@ -56,13 +56,8 @@ baseballdataclean2 <- baseballdataclean2 %>%
 
 baseballdatacleanqual <- baseballdataclean2 %>%
   filter(tot > 50) %>%
+  filter(!events %in% c("sac_bunt", "catcher_interf")) %>%
   mutate(speeddiff = effective_speed - release_speed)
-
-# Calculate means for each numeric variable
-mean_summary <- baseballdataclean2 %>%
-  filter(tot > 50) %>%
-  group_by(PLAYERNAME) %>%
-  summarise(across(where(is.numeric), mean, na.rm = TRUE))
   
 ```
 
@@ -76,32 +71,6 @@ baseballdataclean2 %>%
   theme_minimal()
 ```
 
-```{r}
-baseballdataclean2 %>%
-  ggplot(aes(x =  bat_speed, y = swing_length)) +
-  geom_point() +
-  geom_smooth(method = 'lm', se = TRUE) +
-  labs(title = "Relationship Between Bat Speed and Swing Length") +
-  theme_minimal()
-```
-
-```{r}
-pitcherdata %>%
-  ggplot(aes(x = avg_swing_speed, y = hard_hit_percent)) +
-  geom_point() +
-  geom_smooth(method = 'lm') +
-  labs(title = "Relationship Between Fast Swing Rate and Average Swing Speed (Qualified)") +
-  theme_minimal()
-```
-
-```{r}
-pitcherdata %>%
-  ggplot(aes(x = hard_hit_percent, y = p_era)) +
-  geom_point() +
-  geom_smooth(method = 'lm') +
-  theme_minimal() +
-  labs(title = "Relationship Between Hard Hit Rate and Pitcher ERA")
-```
 ```{r}
 baseballdatacleanqual %>%
   filter(pitch_name != 'Slow Curve' & pitch_name != 'Forkball') %>%
@@ -289,12 +258,7 @@ allvert2 %>%
   theme_minimal() +
   labs(x = "Pitch Type", y = "Vertical Break (inches)", title = "Mean Vertical Break Comparison by Pitch Type", fill = "Bat Speed Against", caption = "Takeaway: Pitchers With Slow Bat Speed Against: Less Vertical Break on Every Pitch Except Splitter")
 ```
-```{r}
-baseballdatacleanqual %>%
-  ggplot(aes(x = bat_speed)) +
-  geom_histogram() +
-  theme_minimal()
-```
+
 # Do the above with like 5 specific pitchers to show evidence of variation (could also do boxplots)
 
 # This is one visualization we could present
@@ -303,19 +267,71 @@ baseballdatacleanqual %>%
 all50against <- fastavgagainst %>%
   full_join(slowavgagainst)
 
+all50againstall <- baseballdatacleanqual %>%
+  left_join(all50against) %>%
+  filter(avgbatspeeddiff != 'NA')
+
+all50against <- all50against %>%
+  mutate(PLAYERNAME = fct_reorder(PLAYERNAME, avgbatspeeddiff))
+
 baseballdatacleanqual %>%
   ungroup() %>%
   summarize(mean(batspeeddiff))
 
 all50against %>%
-  ggplot(aes(x = reorder(PLAYERNAME, -avgbatspeeddiff), y = avgbatspeeddiff)) +
-  geom_col(aes(fill = avgbatspeeddiff > 0)) +  # Conditional color fill based on avgbatspeeddiff > 0
-  geom_hline(yintercept = -1.465536e-16, color = 'blue', size = 1.5) +
+  ggplot(aes(x = PLAYERNAME, y = avgbatspeeddiff)) +
+  geom_col(aes(fill = avgbatspeeddiff > 0)) +
+  geom_hline(yintercept = -6.882775e-17, color = 'blue', size = 1.5) +
   labs(x = "Pitcher Name", y = "Avg Speed Difference", title = "Average Bat Speed Difference Against Compared to Batter Mean Bat Speed", caption = "Blue line Indicates average bat speed differential") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  scale_fill_manual(values = c("red", "darkgreen"), name = "Bat Speed Difference", labels = c("Below Average", "Above Average"))  # Red for below 0, green for above
+  scale_fill_manual(values = c("red", "darkgreen"), name = "Bat Speed Difference", labels = c("Below Average", "Above Average"))
 ```
+
+```{r}
+all50againstall3balls <- all50againstall %>%
+  filter(balls == 3 & strikes < 2)
+
+all50againstall3balls <- all50againstall3balls %>%
+  mutate(PLAYERNAME = fct_reorder(PLAYERNAME, avgbatspeeddiff))
+
+all50againstall3balls%>%
+  ungroup() %>%
+  summarize(mean(avgbatspeeddiff))
+
+all50againstall3balls %>%
+  ggplot(aes(x = PLAYERNAME, y = avgbatspeeddiff)) +
+  geom_col(aes(fill = avgbatspeeddiff > 0)) +
+  geom_hline(yintercept =  0.2149666, color = 'blue', size = 1.5) +
+  labs(x = "Pitcher Name", y = "Avg Speed Difference", title = "Average Bat Speed Difference Against Compared to Batter Mean Bat Speed In 3 Ball Counts", caption = "Blue line Indicates average bat speed differential") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("red", "darkgreen"), name = "Bat Speed Difference", labels = c("Below Average", "Above Average"))
+```
+```{r}
+all50againstall2strikes <- all50againstall %>%
+  filter(balls < 2 & strikes == 2) %>%
+  ungroup()
+  
+all50againstall2strikes <- all50againstall2strikes %>%
+  mutate(PLAYERNAME = fct_reorder(PLAYERNAME, avgbatspeeddiff))
+  
+all50againstall2strikes %>%
+  ungroup() %>%
+  summarize(mean(avgbatspeeddiff))
+
+all50againstall2strikes %>%
+  ggplot(aes(x = PLAYERNAME, y = avgbatspeeddiff)) +
+  geom_col(aes(fill = avgbatspeeddiff > 0)) +
+  geom_hline(yintercept = -0.3192937, color = 'blue', size = 1.5) +
+  labs(x = "Pitcher Name", y = "Avg Speed Difference", title = "Average Bat Speed Difference Against Compared to Batter Mean Bat Speed In 2 Strike Counts", caption = "Blue line Indicates average bat speed differential") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("red", "darkgreen"), name = "Bat Speed Difference", labels = c("Below Average", "Above Average"))
+```
+
+
+
 ```{r}
 vars <- c("pfx_x","pfx_z","release_speed","speeddiff","release_spin_rate")
 # Overall Averages
@@ -343,25 +359,6 @@ baseballdatacleanqual %>%
 ```
 
 ```{r}
-# Overall Averages
-baseballdatacleanqual %>%
-  ungroup() %>%
-  summarize(across(vars, ~mean(. , na.rm = TRUE)))
-
-# Averages When Hitters Swing SLOWER than their average swing speed
-baseballdatacleanqual %>%
-  filter(fasterthanavg == FALSE) %>%
-  ungroup() %>%
-  summarize(across(vars, ~mean(. , na.rm = TRUE)))
-
-# Averages When Hitters Swing FASTER than their average swing speed
-baseballdatacleanqual %>%
-  filter(fasterthanavg == TRUE) %>%
-  ungroup() %>%
-  summarize(across(vars, ~mean(. , na.rm = TRUE)))
-```
-
-```{r}
 library(GGally)
 ggpairs(pitcherdata, columns = c("fastball_avg_speed", "fastball_avg_spin", "fastball_avg_break_x", "fastball_avg_break_z","n_fastball_formatted", "avg_swing_speed"))
 ```
@@ -383,6 +380,90 @@ slowerpitchcount %>%
   filter(pitch_name != "Forkball" & pitch_name != "Knuckleball" & pitch_name != "Slurve" & pitch_name != "Slow Curve") %>%
   mutate(propslowerbat = slowerbatspeed / totalpitches) %>%
   arrange(desc(propslowerbat))
+```
+
+
+```{r}
+threeballs <- baseballdatacleanqual %>%
+  filter(balls == 3 & strikes < 2)
+
+twostrikes <- baseballdatacleanqual %>%
+  filter(balls < 1 & strikes == 2)
+
+threeballs %>%
+  ungroup() %>%
+  summarize(mean(bat_speed))
+
+twostrikes %>%
+  ungroup() %>%
+  summarize(mean(bat_speed))
+
+baseballdatacleanqual %>%
+  ungroup() %>%
+  summarize(mean(bat_speed))
+  
+```
+```{r}
+
+# Swing Slower on 3 Ball Count
+threeballs %>%
+ filter(fasterthanavg == FALSE) %>%
+  ungroup() %>%
+  group_by(pitch_name) %>%
+  summarize(across(vars, ~mean(. , na.rm = TRUE))) %>%
+  filter(pitch_name == "4 Seam" | pitch_name == "Changeup" | pitch_name == "Curveball" | pitch_name == "K Curve" | pitch_name == "Sinker" | pitch_name == "Slider" | pitch_name == "Sweeper" | pitch_name == "Cutter" | pitch_name == "Splitter")
+
+# Swing faster on 2 strike count
+twostrikes %>%
+  filter(fasterthanavg == TRUE) %>%
+  ungroup() %>%
+  group_by(pitch_name) %>%
+  summarize(across(vars, ~mean(. , na.rm = TRUE))) %>%
+  filter(pitch_name == "4 Seam" | pitch_name == "Changeup" | pitch_name == "Curveball" | pitch_name == "K Curve" | pitch_name == "Sinker" | pitch_name == "Slider" | pitch_name == "Sweeper" | pitch_name == "Cutter" | pitch_name == "Splitter")
+
+# Overall averages across pitch type
+baseballdatacleanqual %>%
+  ungroup() %>%
+  group_by(pitch_name) %>%
+  summarize(across(vars, ~mean(. , na.rm = TRUE))) %>%
+  filter(pitch_name == "4 Seam" | pitch_name == "Changeup" | pitch_name == "Curveball" | pitch_name == "K Curve" | pitch_name == "Sinker" | pitch_name == "Slider" | pitch_name == "Sweeper" | pitch_name == "Cutter" | pitch_name == "Splitter")
+```
+
+```{r}
+threeballs %>%
+  ungroup() %>%
+  summarize(mean(bat_speed))
+
+
+threeballs %>%
+  filter(pitch_name != 'Slow Curve' & pitch_name != 'Forkball' & pitch_name != "Slurve" & pitch_name != "Knuckleball") %>%
+  filter(bat_speed > 50) %>%
+  ggplot(aes(x = pitch_name, y = bat_speed, fill = pitch_name)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 72.72109, color = "blue") +
+  theme_minimal() +
+  labs(x = "Pitch Name", 
+       y = "Swing Speed", 
+       title = "Distribution of Batters' Swing Speeds by Pitch Type In 3 Ball Counts") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+```{r}
+twostrikes %>%
+  ungroup() %>%
+  summarize(mean(bat_speed))
+
+
+twostrikes %>%
+  filter(pitch_name != 'Slow Curve' & pitch_name != 'Forkball' & pitch_name != "Slurve" & pitch_name != "Knuckleball") %>%
+  filter(bat_speed > 57 & bat_speed < 78) %>%
+  ggplot(aes(x = pitch_name, y = bat_speed, fill = pitch_name)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 67.857, color = "blue") +
+  theme_minimal() +
+  labs(x = "Pitch Name", 
+       y = "Swing Speed", 
+       title = "Distribution of Batters' Swing Speeds by Pitch Type In 2 Strike Counts") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 
@@ -420,6 +501,3 @@ We plan to improve the visualizations we have already created, as well as create
 sessionInfo()
 ```
 
-
-
-# Create new variable indicating whether a players bat speed was slower or faster than their average, and then use it for analyis like above
