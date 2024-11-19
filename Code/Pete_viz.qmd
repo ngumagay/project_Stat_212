@@ -106,10 +106,14 @@ all50against %>%
   ggplot(aes(x = PLAYERNAME, y = avgbatspeeddiff)) +
   geom_col(aes(fill = avgbatspeeddiff > 0)) +
   geom_hline(yintercept = -6.882775e-17, color = 'blue', size = 1.5) +
-  labs(x = "Pitcher Name", y = "Avg Speed Difference", title = "Average Bat Speed Difference Against Compared to Batter Mean Bat Speed", caption = "Blue line Indicates average bat speed differential") +
+  labs(x = "Pitcher Name", y = "Avg Speed Difference (mph)", title = "Pitchers' Average Bat Speed Difference Against Compared to Batters' Mean Bat Speeds", caption = "Blue line Indicates average bat speed differential") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  scale_fill_manual(values = c("red", "darkgreen"), name = "Bat Speed Difference", labels = c("Below Average", "Above Average"))
+  scale_fill_manual(values = c("red", "darkgreen"), name = "Bat Speed Difference Against", labels = c("Below Average", "Above Average"))
 ```
   
-  
+# Feedback Notes
+1. Add units to y axis
+2. Try to add a third variable to data, like maybe each pitcher's ERA, or wOBA labeled inside their bar
+3. Better define how the data was calculated mean(observed bat speeds - batter's mean bat speed) for each pitcher
+4. Further explain context in caption for why these 50 specific pitchers were chosen
