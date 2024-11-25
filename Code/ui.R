@@ -137,27 +137,25 @@ server <- function(input, output) {
       theme_minimal()
   })
 
-  # Obtain Mean Metrics
-  varsplot <- c("release_speed", "release_spin_rate", "pfx_x", "pfx_z")
+  
   output$pitch_metric_table <- renderTable({
+    #browser()
+    # Obtain Mean Metrics
+    varsplot <- c("release_speed", "release_spin_rate", "pfx_x", "pfx_z")
     # Compute mean values for the filtered data
-    filtered_means <- baseballdatacleanqual %>%
-      filter(PLAYERNAME == input$filter_pitcher2, pitch_name == input$filter_pitch_type2) %>%
-      summarize(across(all_of(varsplot), ~mean(.x, na.rm = TRUE))) %>%
-      unlist()  # Unlist the data frame to get a named vector
+    filtered_data <- baseballdatacleanqual %>%
+      filter(PLAYERNAME == input$filter_pitcher2, pitch_name == input$filter_pitch_type2)
+    filtered_means <- filtered_data %>%
+      summarize(across(all_of(varsplot), ~mean(.x, na.rm = TRUE))) %>% select(-PLAYERNAME)
     
     # Compute overall mean values for the entire dataset
-    overall_means <- baseballdatacleanqual %>%
+    overall_means <- baseballdatacleanqual %>% ungroup() %>%
       filter(pitch_name == input$filter_pitch_type2) %>%
-      summarize(across(all_of(varsplot), ~mean(.x, na.rm = TRUE))) %>%
-      unlist()  # Unlist the data frame to get a named vector
+      summarize(across(all_of(varsplot), ~mean(.x, na.rm = TRUE)))
     
-    # Create a tibble with the metrics and their corresponding mean values
-    combined_table <- tibble(
-      Metric = varsplot,
-      Selected_Mean = filtered_means[varsplot],
-      Overall_Mean = overall_means[varsplot]
-    )
+    
+    combined_table <- bind_rows( filtered_means,overall_means) %>% mutate(Type = c('Filtered','Overall')) # Means for selected filters
+ 
     
     combined_table
   })
