@@ -4,9 +4,6 @@ format: html
 editor: visual
 ---
 
-
-
-
 ```{r}
 # Reading in our player name and player data datasets
 
@@ -25,7 +22,6 @@ pitcherdata <- read_csv("../data/pitcher_data.csv")
 playerdataclean <- playerdata %>%
   select(PLAYERNAME, LASTNAME, MLBID, THROWS)
 ```
-
 
 ```{r}
 # Data cleaning including selecting relevant variables that might be useful in our analysis, joining datasets to include pitcher's names in our main dataset, and filtering out any data points that are NA for bat_speed and swing_length (since we will rely heavily on these variables for our analysis), as well as any data points that don't involve any swing being made(takes, hit by pitches, bunts, etc.) 
@@ -60,7 +56,6 @@ baseballdatacleanqual <- baseballdataclean2 %>%
   
 ```
 
-
 ```{r}
 meanbatspeeds <- baseballdatacleanqual %>%
   group_by(player_name) %>%
@@ -73,8 +68,6 @@ pitchermeanbatspeeds <- baseballdatacleanqual %>%
 baseballdatacleanqual <- baseballdatacleanqual %>%
   left_join(meanbatspeeds)
 ```
-
-
 
 ```{r}
 baseball_war <- baseballdatacleanqual %>%
@@ -91,14 +84,38 @@ baseball_mean <- baseballdatacleanqual %>%
 
 ```{r}
 ggplot(data = baseball_war, aes(y = mean, x = PLAYERNAME, fill = PLAYERNAME)) +
-  geom_col() +
+  geom_point() +
   geom_hline(yintercept = 70.15831, color = "blue") +
   geom_text(y = 75, x = "Erick Fedde", label = "MLB Average Pitcher Bat Speed Against", alpha = 0.5, size = 2) +
   geom_segment(aes(x = "Erick Fedde", y = 73, xend = "Erick Fedde", yend = 71), 
-               arrow = arrow(length = unit(0.1, "cm"))) +
-  scale_y_continuous(limits = c(0,80)) +
+               arrow = arrow(length = unit(0.2, "cm"))) +
+  scale_y_continuous(limits = c(68,73)) +
   labs(title = "Pitcher's Average Bat Speed Against") +
   xlab(label = "Top 10 Pitchers in MLB") +
   ylab(label = "AVG Bat Speed Against") +
   theme(axis.text.x = element_text(angle = 90), legend.position = "none")
 ```
+
+
+
+Definitely make the data more concentrated around 65-80, Try to make the order more important so list it by the highest and least WAR. I can add more pitchers, Make the colors by the team that they play for, and include the WAR in the visualization. I could do this for more detailed data like the each player's pitch as well as how that would be compared to all the other pitches in the dataset. It could be cool to try and find a correlation with the pitcher's pitch metrics compared with the average pitcher's pitch metrics. That could push our project to answer a more specific question and be able to find out that there is a correlation between certain pitches and their expected bat speed against.
+
+
+
+```{r}
+library(ggplot2)
+
+# Simplified plot with the y-axis between 65 and 80
+ggplot(data = baseball_war, aes(x = PLAYERNAME, y = mean, fill = PLAYERNAME)) +
+  geom_col() +  # Bar plot
+  geom_hline(yintercept = 70.15831, color = "blue", linetype = "dashed") +  # MLB average line
+  geom_text(aes(x = "Erick Fedde", y = 75, label = "MLB Average Pitcher Bat Speed Against"), 
+            alpha = 0.7, size = 3, hjust = 1) +  # Label for "Erick Fedde"
+  geom_segment(aes(x = "Erick Fedde", y = 73, xend = "Erick Fedde", yend = 71), 
+               arrow = arrow(length = unit(0.1, "cm"))) +  # Arrow pointing to the average line
+  scale_y_continuous(limits = c(65, 80)) +  # Set y-axis range
+  labs(title = "Pitcher's Average Bat Speed Against", x = "Top 10 Pitchers in MLB", y = "AVG Bat Speed Against") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+```
+
+
