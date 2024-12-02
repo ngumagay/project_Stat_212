@@ -489,11 +489,6 @@ baseballdatacleanqual %>%
 ```
 
 
-# CREATE A SHINY APP THAT ALLOWS THE USER TO BOTH PREDICT AVG SWING SPEED INPUTTING SEVERAL VARIABLES AND OBSERVE THE RELATIONSHIP BETWEEN SWING SPEED AND PITCHER PERFORMANCE (TWO DIFFERENT TABS)
-
-
-
-
 # Data Context
 
 Our data was collected using Statcast, by CSAS (Connecticut Sports Analytics) to analyze pitcher-batter interactions in MLB. Every MLB ballpark is equipped with Statcast tracking technology, which is used to acquire the data. See this link [statcastlink](https://www.mlb.com/glossary/statcast) for more background on Statcast. It contains data on 346,250 Major League Baseball plate appearances from 4/2/2024 to 6/30/2024 (first half of the 2024 regular season), as well as 94 different variables.

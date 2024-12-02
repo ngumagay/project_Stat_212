@@ -48,8 +48,25 @@ baseballdatacleanqual <- baseballdataclean2 %>%
   mutate(speeddiff = effective_speed - release_speed) %>%
   ungroup()
 
+meanbatspeeds <- baseballdatacleanqual %>%
+  group_by(player_name) %>%
+  summarize(meanbatspeed = mean(bat_speed, na.rm = TRUE))
+
 baseballdatacleanqual <- baseballdatacleanqual %>%
-  mutate(zscore = (bat_speed - mean(bat_speed))/sd(bat_speed))
+  left_join(meanbatspeeds)
+
+sdbatspeeds <- baseballdatacleanqual %>%
+  group_by(player_name) %>%
+  summarize(sdbatspeed = sd(bat_speed, na.rm = TRUE))
+
+baseballdatacleanqual <- baseballdatacleanqual %>%
+  left_join(sdbatspeeds)
+
+
+baseballdatacleanqual <- baseballdatacleanqual %>%
+  group_by(player_name) %>%
+  mutate(zscore = (bat_speed - meanbatspeed) / sdbatspeed) %>%
+  ungroup()
 
 
 ui <- navbarPage(
@@ -67,7 +84,7 @@ ui <- navbarPage(
                tags$li("What causes changes in swing speed or length?")
              )
            )
-  ), # End of Overview tab
+  ),
   
   # Data Exploration tab
   tabPanel("Swing Speed vs. ERA",
@@ -86,8 +103,8 @@ ui <- navbarPage(
                              choices = unique(baseballdatacleanqual$PLAYERNAME), 
                              selected = unique(baseballdatacleanqual$PLAYERNAME)[1]),
                  selectInput("filter_pitch_type2", "Select Pitch Type:", 
-                             choices = NULL,  # This will be updated dynamically
-                             selected = NULL)  # Initially empty, will be set when pitcher is selected
+                             choices = NULL,  # Updated dynamically
+                             selected = NULL)
                ),
                mainPanel(
                  plotOutput("swing_speed_distribution_plot"),
@@ -95,27 +112,24 @@ ui <- navbarPage(
                )
              )
            )
-  ), # End of Pitch Metrics tab
+  ),
   
-  # Variable vs Swing Speed tab
-  tabPanel("Variable vs Swing Speed",
+  tabPanel("Pitch Metrics Comparison by Z-Score Sign",
            fluidPage(
              sidebarLayout(
                sidebarPanel(
-                 selectInput("x_var", "Select Variable for X-Axis:", 
-                             choices = c("f_strike_percent", "n_fastball_formatted", "fastball_avg_speed", "fastball_avg_spin",
-                                         "fastball_avg_break_x", "fastball_avg_break_z","n_breaking_formatted","breaking_avg_speed","breaking_avg_spin",
-                                         "breaking_avg_break_x","breaking_avg_break_z","n_offspeed_formatted","offspeed_avg_speed",
-                                         "offspeed_avg_spin","offspeed_avg_break_x","offspeed_avg_break_z"), 
-                             selected = "n_fastball_formatted")
+                 # You can customize this input to choose the metrics to compare
+                 selectInput("metric", "Select Metric to Compare:",
+                             choices = c("release_speed", "release_spin_rate", "pfx_x", "pfx_z"),
+                             selected = "release_speed")
                ),
                mainPanel(
-                 plotOutput("var_vs_swing_speed_plot"),
-                 textOutput("r_squared_text")
+                 plotlyOutput("zscore_comparison_plot"),
+                 textOutput("comparison_text")
                )
              )
            )
-  ), # End of Variable vs Swing Speed tab
+  ),
   
   # Batter Swing Comparison tab
   tabPanel("Pitch-Type Z-Score Comparison",
@@ -131,10 +145,26 @@ ui <- navbarPage(
                )
              )
            )
+  ),
+  
+  # Metric Correlation tab
+  tabPanel("Metric Correlation",
+           fluidPage(
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("correlation_pitcher", "Select Pitcher:",
+                             choices = unique(baseballdatacleanqual$PLAYERNAME),
+                             selected = unique(baseballdatacleanqual$PLAYERNAME)[1])
+               ),
+               mainPanel(
+                 tableOutput("correlation_table"),
+                 plotOutput("correlation_plot")
+               )
+             )
+           )
   )
-) # End of navbarPage
+)
 
-# Server function
 server <- function(input, output, session) {
   
   # Update pitch_name dropdown based on selected pitcher
@@ -274,6 +304,103 @@ server <- function(input, output, session) {
     
     # Display the R-squared value
     paste("R-squared value:", round(r_squared, 3))
+  })
+  # Correlation Table
+  output$correlation_table <- renderTable({
+    pitcher_data <- baseballdatacleanqual %>%
+      filter(PLAYERNAME == input$correlation_pitcher)
+    
+    correlations <- pitcher_data %>%
+      group_by(pitch_name) %>%
+      summarise(across(c(release_speed, release_spin_rate, pfx_x, pfx_z), 
+                       ~cor(.x, zscore, use = "complete.obs"), 
+                       .names = "Correlation_{col}")) %>%
+      pivot_longer(cols = -pitch_name, names_to = "Metric", values_to = "Correlation") %>%
+      group_by(pitch_name) %>%
+      slice_max(abs(Correlation), n = 1)
+    
+    correlations
+  })
+  
+  # Correlation Plot
+  output$correlation_plot <- renderPlot({
+    pitcher_data <- baseballdatacleanqual %>%
+      filter(PLAYERNAME == input$correlation_pitcher)
+    
+    correlations <- pitcher_data %>%
+      group_by(pitch_name) %>%
+      summarise(across(c(release_speed, release_spin_rate, pfx_x, pfx_z), 
+                       ~cor(.x, zscore, use = "complete.obs"), 
+                       .names = "Correlation_{col}")) %>%
+      pivot_longer(cols = -pitch_name, names_to = "Metric", values_to = "Correlation")
+    
+    ggplot(correlations, aes(x = Metric, y = Correlation, fill = pitch_name)) +
+      geom_bar(stat = "identity", position = "dodge") +
+      labs(
+        title = paste("Metric Correlations by Pitch Type for", input$correlation_pitcher),
+        x = "Metric",
+        y = "Correlation"
+      ) +
+      theme_minimal() +
+      scale_fill_brewer(palette = "Set3")
+  })
+  
+  filtered_data <- reactive({
+    # Calculate the mean z-score for each pitcher
+    mean_zscore_data <- baseballdatacleanqual %>%
+      group_by(PLAYERNAME) %>%
+      summarise(mean_zscore = mean(zscore, na.rm = TRUE))
+    
+    # Join the mean z-score back to the base data
+    merged_data2 <- baseballdatacleanqual %>%
+      left_join(mean_zscore_data, by = "PLAYERNAME")
+    
+    # Split into two subsets: positive and negative mean z-scores
+    positive_zscore_data <- merged_data2 %>%
+      filter(mean_zscore > 0)
+    
+    negative_zscore_data <- merged_data2 %>%
+      filter(mean_zscore <= 0)
+    
+    list(positive = positive_zscore_data, negative = negative_zscore_data)
+  })
+  
+  # Render the plot comparing the selected metric for positive and negative mean z-scores
+  output$zscore_comparison_plot <- renderPlotly({
+    data <- filtered_data()
+    
+    # Prepare the data for the selected metric
+    positive_data <- data$positive %>%
+      group_by(pitch_name) %>%
+      summarise(mean_value = mean(get(input$metric), na.rm = TRUE)) %>%
+      mutate(zscore_sign = "Positive Z-Score")
+    
+    negative_data <- data$negative %>%
+      group_by(pitch_name) %>%
+      summarise(mean_value = mean(get(input$metric), na.rm = TRUE)) %>%
+      mutate(zscore_sign = "Negative Z-Score")
+    
+    # Combine both datasets
+    combined_data <- bind_rows(positive_data, negative_data)
+    
+    combined_data <- combined_data %>%
+      filter(!pitch_name %in% c("Forkball", "Knuckleball", "Slow Curve", "Slurve"))
+    
+    
+    # Plot the comparison using column plots
+    p <- ggplot(combined_data, aes(x = pitch_name, y = mean_value, fill = zscore_sign)) +
+      geom_col(position = "dodge") +
+      labs(title = paste("Comparison of", input$metric, "for Positive vs. Negative Z-Scores by Pitch Type"),
+           x = "Pitch Type",
+           y = paste("Average", input$metric)) +
+      scale_fill_manual(values = c("Positive Z-Score" = "blue", "Negative Z-Score" = "red")) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      scale_x_discrete(expand = c(0, 0)) +  # Remove extra space on the x-axis
+      scale_y_continuous(expand = c(0, 0))  # Remove extra space on the y-axis
+    
+    
+    ggplotly(p)  # Make the plot interactive with Plotly
   })
 }
 
