@@ -5,6 +5,7 @@ library(tidyverse)
 library(ggplot2)
 library(dplyr)
 library(gridExtra)
+library(plotly)
 
 baseballdata <- read_csv("../data/swing_data.csv")
 
@@ -126,6 +127,31 @@ ui <- navbarPage(
                mainPanel(
                  plotlyOutput("zscore_comparison_plot"),
                  textOutput("comparison_text")
+               )
+             )
+           )
+  ),
+  
+  # Count and pitch type tab
+  tabPanel("Count and Pitch Type",
+           fluidPage(
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("filter_balls2", "Balls:", 
+                             choices = unique(baseballdatacleanqual$balls),
+                             selected = unique(baseballdatacleanqual$balls)[0]),
+                 selectInput("filter_strikes2", "Strikes:", 
+                             choices = unique(baseballdatacleanqual$strikes), 
+                             selected = unique(baseballdatacleanqual$strikes)[2]),
+                 selectInput("filter_pitch_type2", "Select Pitch Type:", 
+                             choices = unique(baseballdatacleanqual$pitch_name),
+                             selected = unique(baseballdatacleanqual$pitch_name)[1]),
+                 # selectInput("filter_pitch_velocity2", "Select Pitch Velocity(mph):", 
+                             # choices = unique(baseballdatacleanqual$velo_group),
+                             # selected = unique(baseballdatacleanqual$velo_group)[1])
+               ),
+               mainPanel(
+                plotOutput("count_pitch_type_plot")
                )
              )
            )
@@ -401,6 +427,37 @@ server <- function(input, output, session) {
     
     
     ggplotly(p)  # Make the plot interactive with Plotly
+  })
+
+  # Plot: Distribution of Swing Speeds for Count vs Pitch Type
+  output$count_pitch_type_plot <- renderPlot({
+    # Filter data for the selected count and pitch type
+    type_count_data <- baseballdatacleanqual %>%
+      filter(pitch_name == input$filter_pitch_type2, balls == input$filter_balls2, strikes == input$filter_strikes2)
+    
+    # Filter overall data for the selected pitch type and count(all pitchers)
+    count_data <- baseballdatacleanqual %>%
+      filter(balls == input$filter_balls2, strikes == input$filter_strikes2)
+    
+    #mean bat speed
+    avg_bat_speed <- mean(baseballdatacleanqual$bat_speed)
+      
+    
+    # Plot both distributions
+    ggplot() +
+      geom_density(data = type_count_data, aes(x = bat_speed, fill = "Pitch Type"), alpha = 0.5) +
+      geom_density(data = count_data, aes(x = bat_speed, fill = "Overall"), alpha = 0.5) +
+      geom_vline(aes(xintercept = 70.210429369938)) +
+      scale_fill_manual(values = c("Pitch Type" = "red", "Overall" = "blue")) +
+      labs(
+        title = paste("Distribution of Swing Speeds for", input$filter_balls2, "-", input$filter_strikes2, "Count"),
+        x = "Swing Speed",
+        y = "Density",
+        fill = "Category",
+        subtitle = "Vertical line represents MLB average swing speed for all counts and pitch types"
+      ) +
+      scale_x_continuous(limits = c(50, 95)) + 
+      theme_minimal()
   })
 }
 
