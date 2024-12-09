@@ -87,16 +87,33 @@ ui <- navbarPage(
            )
   ),
   
-  # Data Exploration tab
-  tabPanel("Swing Speed vs. ERA",
+  # Glossary tab
+  tabPanel("Glossary",
            fluidPage(
-             h3("Mean Z-Score vs. ERA"),
-             plotlyOutput("mean_zscore_vs_era_plot")
+             h3("Key Terms"),
+             tags$ul(
+               tags$li("Swing Speed: How fast the sweet spot of the bat is moving, in mph, at the point of contact with the ball"),
+               tags$li("pfx_x: Horizontal movement of a pitch in feet from the catcher's perspective"),
+               tags$li("pfx_z: Vertical movement of a pitch in feet from the catcher's perspective"),
+               tags$li("release_spin_rate: The rate of spin on a baseball after it is released. It is measured in revolutions per minute"),
+               tags$li("release_speed: The maximum speed of a given pitch at any point from its release to the time it crosses home plate"),
+               tags$li("era: The number of earned runs a pitcher allows per nine innings")
+             ),
+             h3("Pitch Types and Descriptions:"),
+             tags$ul(
+               tags$li("Fastball: The most common pitch in baseball, characterized by its high speed and straight trajectory"),
+               tags$li("Slider: A breaking pitch in baseball that moves sideways and breaks sharply as it approaches the batter"),
+               tags$li("Curveball: A breaking pitch in baseball and softball that has a large, loopy up-and-down movement"),
+               tags$li("Changeup: A baseball pitch that's thrown at a slower speed than a fastball but with the same trajectory"),
+               tags$li("Sinker: A type of fastball in baseball that has a downward and horizontal movement, and is known for inducing ground balls"),
+               tags$li("Cutter: A type of fastball that moves horizontally toward the pitcher's glove side as it reaches home plate"),
+               tags$li("Splitter: Thrown with the effort of a fastball, but it will drop sharply as it nears home plate")
+             )
            )
   ),
   
   # Pitch Metrics tab
-  tabPanel("Obtain Pitch Metrics",
+  tabPanel("Individual Pitch Metrics",
            fluidPage(
              sidebarLayout(
                sidebarPanel(
@@ -115,50 +132,27 @@ ui <- navbarPage(
            )
   ),
   
-  tabPanel("Pitch Metrics Comparison by Z-Score Sign",
+  # Pitcher Metric Correlations tab
+  tabPanel("Pitcher Metric Correlations",
            fluidPage(
              sidebarLayout(
                sidebarPanel(
-                 # You can customize this input to choose the metrics to compare
-                 selectInput("metric", "Select Metric to Compare:",
-                             choices = c("release_speed", "release_spin_rate", "pfx_x", "pfx_z"),
-                             selected = "release_speed")
+                 selectInput(
+                   "correlation_pitcher", "Select Pitcher:",
+                   choices = unique(baseballdatacleanqual$PLAYERNAME),
+                   selected = unique(baseballdatacleanqual$PLAYERNAME)[1]
+                 )
                ),
                mainPanel(
-                 plotlyOutput("zscore_comparison_plot"),
-                 textOutput("comparison_text")
+                 tableOutput("correlation_table"),
+                 plotOutput("correlation_plot")
                )
              )
            )
   ),
   
-  # Count and pitch type tab
-  tabPanel("Count and Pitch Type",
-           fluidPage(
-             sidebarLayout(
-               sidebarPanel(
-                 selectInput("filter_balls2", "Balls:", 
-                             choices = unique(baseballdatacleanqual$balls),
-                             selected = unique(baseballdatacleanqual$balls)[0]),
-                 selectInput("filter_strikes2", "Strikes:", 
-                             choices = unique(baseballdatacleanqual$strikes), 
-                             selected = unique(baseballdatacleanqual$strikes)[2]),
-                 selectInput("filter_pitch_type2", "Select Pitch Type:", 
-                             choices = unique(baseballdatacleanqual$pitch_name),
-                             selected = unique(baseballdatacleanqual$pitch_name)[1]),
-                 # selectInput("filter_pitch_velocity2", "Select Pitch Velocity(mph):", 
-                             # choices = unique(baseballdatacleanqual$velo_group),
-                             # selected = unique(baseballdatacleanqual$velo_group)[1])
-               ),
-               mainPanel(
-                plotOutput("count_pitch_type_plot")
-               )
-             )
-           )
-  ),
-  
-  # Batter Swing Comparison tab
-  tabPanel("Pitch-Type Z-Score Comparison",
+  # Pitcher Arsenal Z-Score Comparison tab
+  tabPanel("Pitcher Arsenal Z-Score Comparison",
            fluidPage(
              sidebarLayout(
                sidebarPanel(
@@ -173,24 +167,53 @@ ui <- navbarPage(
            )
   ),
   
-  # Metric Correlation tab
-  tabPanel("Metric Correlation",
+  # Swing Speed Z Score vs. ERA tab
+  tabPanel("Swing Speed Z Score vs. ERA",
+           fluidPage(
+             h3("Mean Z-Score vs. ERA"),
+             plotlyOutput("mean_zscore_vs_era_plot")
+           )
+  ),
+  
+  # Pitch Metrics Comparison by Z-Score tab
+  tabPanel("Pitch Metrics Comparison by Z-Score",
            fluidPage(
              sidebarLayout(
                sidebarPanel(
-                 selectInput("correlation_pitcher", "Select Pitcher:",
-                             choices = unique(baseballdatacleanqual$PLAYERNAME),
-                             selected = unique(baseballdatacleanqual$PLAYERNAME)[1])
+                 selectInput("metric", "Select Metric to Compare:",
+                             choices = c("release_speed", "release_spin_rate", "pfx_x", "pfx_z"),
+                             selected = "release_speed")
                ),
                mainPanel(
-                 tableOutput("correlation_table"),
-                 plotOutput("correlation_plot")
+                 plotlyOutput("zscore_comparison_plot"),
+                 textOutput("comparison_text")
+               )
+             )
+           )
+  ),
+  
+  # Count and Pitch Type tab
+  tabPanel("Count and Pitch Type",
+           fluidPage(
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("filter_balls2", "Balls:", 
+                             choices = unique(baseballdatacleanqual$balls),
+                             selected = unique(baseballdatacleanqual$balls)[1]),
+                 selectInput("filter_strikes2", "Strikes:", 
+                             choices = unique(baseballdatacleanqual$strikes), 
+                             selected = unique(baseballdatacleanqual$strikes)[1]),
+                 selectInput("filter_pitch_type3", "Select Pitch Type:", 
+                             choices = unique(baseballdatacleanqual$pitch_name),
+                             selected = unique(baseballdatacleanqual$pitch_name)[1])
+               ),
+               mainPanel(
+                 plotOutput("count_pitch_type_plot")
                )
              )
            )
   )
 )
-
 server <- function(input, output, session) {
   
   # Update pitch_name dropdown based on selected pitcher
@@ -299,7 +322,7 @@ server <- function(input, output, session) {
       ) +
       facet_wrap(~pitch_name) +            # Facet by pitch type
       labs(
-        title = paste("Z-Score Distribution of Bat Speed by Pitch Type"),
+        title = paste("Z-Score Distribution of Bat Speed Against by Pitch Type for", input$filter_player),
         x = "Z-Score of Bat Speed",
         y = "Density",
         fill = "Category"
@@ -340,7 +363,7 @@ server <- function(input, output, session) {
       group_by(pitch_name) %>%
       summarise(across(c(release_speed, release_spin_rate, pfx_x, pfx_z), 
                        ~cor(.x, zscore, use = "complete.obs"), 
-                       .names = "Correlation_{col}")) %>%
+                       .names = "{col}")) %>%
       pivot_longer(cols = -pitch_name, names_to = "Metric", values_to = "Correlation") %>%
       group_by(pitch_name) %>%
       slice_max(abs(Correlation), n = 1)
@@ -357,13 +380,13 @@ server <- function(input, output, session) {
       group_by(pitch_name) %>%
       summarise(across(c(release_speed, release_spin_rate, pfx_x, pfx_z), 
                        ~cor(.x, zscore, use = "complete.obs"), 
-                       .names = "Correlation_{col}")) %>%
+                       .names = "{col}")) %>%
       pivot_longer(cols = -pitch_name, names_to = "Metric", values_to = "Correlation")
     
     ggplot(correlations, aes(x = Metric, y = Correlation, fill = pitch_name)) +
       geom_bar(stat = "identity", position = "dodge") +
       labs(
-        title = paste("Metric Correlations by Pitch Type for", input$correlation_pitcher),
+        title = paste("Correlation of Z-Score of Swing Speed Against vs Metrics by Pitch Type for", input$correlation_pitcher),
         x = "Metric",
         y = "Correlation"
       ) +
@@ -433,7 +456,7 @@ server <- function(input, output, session) {
   output$count_pitch_type_plot <- renderPlot({
     # Filter data for the selected count and pitch type
     type_count_data <- baseballdatacleanqual %>%
-      filter(pitch_name == input$filter_pitch_type2, balls == input$filter_balls2, strikes == input$filter_strikes2)
+      filter(pitch_name == input$filter_pitch_type3, balls == input$filter_balls2, strikes == input$filter_strikes2)
     
     # Filter overall data for the selected pitch type and count(all pitchers)
     count_data <- baseballdatacleanqual %>%
