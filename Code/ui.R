@@ -212,6 +212,22 @@ ui <- navbarPage(
                )
              )
            )
+  ),
+  
+  #Overall Average Bat Speed Against Distribution vs. Pitcher Average Bat Speed Against Distribution
+  tabPanel("Overall Avg BSA vs Specificed Pitcher BSA",
+           fluidPage(
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("compared_pitcher", "Select Pitcher:",
+                             choices = unique(baseballdatacleanqual$PLAYERNAME),
+                             selected = unique(baseballdatacleanqual$PLAYERNAME)[1])
+               ),
+               mainPanel(
+                 plotOutput("comparison_plot") 
+               )
+             )
+           )
   )
 )
 server <- function(input, output, session) {
@@ -481,6 +497,22 @@ server <- function(input, output, session) {
       ) +
       scale_x_continuous(limits = c(50, 95)) + 
       theme_minimal()
+    
+  })
+  
+  output$comparison_plot <- renderPlotly({
+    compared_pitcher_data <- baseballdatacleanqual %>%
+      filter(PLAYERNAME == input$compared_pitcher, !is.na(bat_speed))
+    
+    p <- ggplot(compared_pitcher_data, aes(x = bat_speed, fill = PLAYERNAME)) +
+      geom_density() +
+      labs(title = paste("Comparing", input$compared_pitcher, "distribution of Bat Speed Against with Overall Distribution"),
+           x = "Bat Speed Against",
+           y = "Frequency")
+    
+    
+    
+    ggplotly(p)
   })
 }
 
