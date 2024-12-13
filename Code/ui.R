@@ -109,7 +109,9 @@ ui <- navbarPage(
                tags$li("Sinker: A type of fastball in baseball that has a downward and horizontal movement, and is known for inducing ground balls"),
                tags$li("Cutter: A type of fastball that moves horizontally toward the pitcher's glove side as it reaches home plate"),
                tags$li("Splitter: Thrown with the effort of a fastball, but it will drop sharply as it nears home plate")
-             )
+             ),
+             fluidRow(column(width = 4, img(src = "collect.png", height ="300px", width = "300px", alt = "Collect Stats")),
+                      column(width = 4, img(src = "grips.jpg", height ="300px", width = "300px", alt = "Pitch Grips")))
            )
   ),
   
