@@ -83,7 +83,8 @@ ui <- navbarPage(
                tags$li("Do pitchers modify batters' behavior?"),
                tags$li("Do some pitchers elicit different swing speeds and swing lengths than others?"),
                tags$li("What causes changes in swing speed or length?")
-             )
+             ),
+             div(tags$img(src = "savant.png", height ="400px", width = "600px", alt = "Data Site"))
            )
   ),
   
@@ -108,6 +109,22 @@ ui <- navbarPage(
                tags$li("Sinker: A type of fastball in baseball that has a downward and horizontal movement, and is known for inducing ground balls"),
                tags$li("Cutter: A type of fastball that moves horizontally toward the pitcher's glove side as it reaches home plate"),
                tags$li("Splitter: Thrown with the effort of a fastball, but it will drop sharply as it nears home plate")
+             )
+           )
+  ),
+  
+  #Overall Average Swing Speed Against Distribution vs. Pitcher Average Swing Speed Against Distribution
+  tabPanel("Overall Avg SSA vs Specificed Pitcher SSA",
+           fluidPage(
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("compared_pitcher", "Select Pitcher:",
+                             choices = unique(baseballdatacleanqual$PLAYERNAME),
+                             selected = unique(baseballdatacleanqual$PLAYERNAME)[1])
+               ),
+               mainPanel(
+                 plotOutput("comparison_plot") 
+               )
              )
            )
   ),
@@ -212,25 +229,31 @@ ui <- navbarPage(
                )
              )
            )
-  ),
-  
-  #Overall Average Bat Speed Against Distribution vs. Pitcher Average Bat Speed Against Distribution
-  tabPanel("Overall Avg BSA vs Specificed Pitcher BSA",
-           fluidPage(
-             sidebarLayout(
-               sidebarPanel(
-                 selectInput("compared_pitcher", "Select Pitcher:",
-                             choices = unique(baseballdatacleanqual$PLAYERNAME),
-                             selected = unique(baseballdatacleanqual$PLAYERNAME)[1])
-               ),
-               mainPanel(
-                 plotOutput("comparison_plot") 
-               )
-             )
-           )
   )
 )
 server <- function(input, output, session) {
+  
+  #Plot specific pitcher's bat speed against to Overall distribution of bat speed against.
+  output$comparison_plot <- renderPlot({
+    
+    #Filter input pitcher as PLAYERNAME and NA values
+    compared_pitcher_data <- baseballdatacleanqual %>%
+      filter(PLAYERNAME == input$compared_pitcher, !is.na(bat_speed))
+    
+    #Filter all the NA values
+    compared_overall_data <- baseballdatacleanqual %>%
+      filter(!is.na(bat_speed))
+    
+    #Plot pitcher against overall
+    ggplot() +
+      geom_density(data = compared_overall_data, aes(x = bat_speed, fill = "Overall"), alpha = 1) +
+      geom_density(data = compared_pitcher_data, aes(x = bat_speed, fill = "Compared Pitcher"), alpha = 0.5) +
+      labs(title = paste("Comparing Swing Speed Against: Distribution of", input$compared_pitcher, " vs Overall Distribution"),
+           x = "Swing Speed Against",
+           y = "Frequency") +
+      scale_fill_manual(values = c("Compared Pitcher" = "blue", "Overall" = "red")) +
+      theme_minimal()
+  })
   
   # Update pitch_name dropdown based on selected pitcher
   observe({
@@ -498,21 +521,6 @@ server <- function(input, output, session) {
       scale_x_continuous(limits = c(50, 95)) + 
       theme_minimal()
     
-  })
-  
-  output$comparison_plot <- renderPlotly({
-    compared_pitcher_data <- baseballdatacleanqual %>%
-      filter(PLAYERNAME == input$compared_pitcher, !is.na(bat_speed))
-    
-    p <- ggplot(compared_pitcher_data, aes(x = bat_speed, fill = PLAYERNAME)) +
-      geom_density() +
-      labs(title = paste("Comparing", input$compared_pitcher, "distribution of Bat Speed Against with Overall Distribution"),
-           x = "Bat Speed Against",
-           y = "Frequency")
-    
-    
-    
-    ggplotly(p)
   })
 }
 
