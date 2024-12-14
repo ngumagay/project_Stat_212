@@ -77,14 +77,36 @@ ui <- navbarPage(
   tabPanel("Overview",
            fluidPage(
              h3("Swing Speed and Pitch Metrics Analysis"),
-             p("This app explores the relationships between swing speed, swing length, and pitch metrics."),
+             p("This app explores the relationships between swing speed and pitch metrics."),
+             fluidRow(
+               column(width = 6, 
+                      p("Looking at the correlations between pitch metrics and bat speed across the overall population, 
+                       the effects were minimal. This finding highlights that in baseball, there is no 'one size fits all' 
+                       approach to success. Each pitcher is unique in how they throw the ball, the pitch types they use, 
+                       and the specific metrics associated with those pitches. The limited overall correlation emphasizes 
+                       the need to analyze individual pitchers’ metrics to better understand their impact on bat speed. 
+                       By examining these individualized metrics, we can gain insights into what each pitcher does well and 
+                       identify areas for improvement. This analysis can help pitchers determine which pitches to use more 
+                       frequently to maximize success and which pitches may need refinement. Additionally, it provides valuable 
+                       information about how specific aspects of a pitcher’s repertoire influence bat speed, offering actionable 
+                       strategies to enhance performance.")
+                    )
+               ),
              p("Guiding Questions:"),
              tags$ul(
                tags$li("Do pitchers modify batters' behavior?"),
-               tags$li("Do some pitchers elicit different swing speeds and swing lengths than others?"),
-               tags$li("What causes changes in swing speed or length?")
+               tags$li("Do some pitchers elicit different swing speeds than others?"),
+               tags$li("What causes changes in swing speed?")
              ),
-             div(tags$img(src = "savant.png", height ="400px", width = "600px", alt = "Data Site"))
+             div(style = "position: absolute; top: 200px; right: 20px; margin-right: 20px; width: 620px; text-align: left;",
+                 p("This scatter plot highlights direct correlations between the average bat speed against a pitcher and their success in 4 key stats. 
+                  Most importantly, as bat speed increases, pitchers allow more runs. As bat speed increases, players hit the ball harder, strike out less, and make more high-quality contact (barrels). 
+                  While these plots do not give the full picture, as there are a large number of factors contributing to pitching success (ERA), the strong correlations between bat speed and these metrics 
+                  provide a rationale to investigate how individual pitchers can limit bat speed against them to increase their success."),
+                 tags$img(src = "bat_speed_scatter.png", 
+                          height = "400px", 
+                          width = "600px", 
+                          alt = "Data Site"))
            )
   ),
   
@@ -110,23 +132,10 @@ ui <- navbarPage(
                tags$li("Cutter: A type of fastball that moves horizontally toward the pitcher's glove side as it reaches home plate"),
                tags$li("Splitter: Thrown with the effort of a fastball, but it will drop sharply as it nears home plate")
              ),
-             fluidRow(column(width = 4, img(src = "collect.png", height ="300px", width = "300px", alt = "Collect Stats")),
-                      column(width = 4, img(src = "grips.jpg", height ="300px", width = "300px", alt = "Pitch Grips")))
-           )
-  ),
-  
-  #Overall Average Swing Speed Against Distribution vs. Pitcher Average Swing Speed Against Distribution
-  tabPanel("Overall Avg SSA vs Specificed Pitcher SSA",
-           fluidPage(
-             sidebarLayout(
-               sidebarPanel(
-                 selectInput("compared_pitcher", "Select Pitcher:",
-                             choices = unique(baseballdatacleanqual$PLAYERNAME),
-                             selected = unique(baseballdatacleanqual$PLAYERNAME)[1])
-               ),
-               mainPanel(
-                 plotOutput("comparison_plot") 
-               )
+             div(style = "position: absolute; top: 170px; right: 150px; text-align: center;",
+                 tags$img(src = "collect.png", height = "300px", width = "300px", alt = "Collect Stats"),
+                 br(),
+                 tags$img(src = "grips.jpg", height = "300px", width = "300px", alt = "Pitch Grips")
              )
            )
   ),
@@ -211,6 +220,22 @@ ui <- navbarPage(
            )
   ),
   
+  #Overall Average Swing Speed Against Distribution vs. Pitcher Average Swing Speed Against Distribution
+  tabPanel("Overall Avg SSA vs Specificed Pitcher SSA",
+           fluidPage(
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("compared_pitcher", "Select Pitcher:",
+                             choices = unique(baseballdatacleanqual$PLAYERNAME),
+                             selected = unique(baseballdatacleanqual$PLAYERNAME)[1])
+               ),
+               mainPanel(
+                 plotOutput("comparison_plot") 
+               )
+             )
+           )
+  ),
+  
   # Count and Pitch Type tab
   tabPanel("Count and Pitch Type",
            fluidPage(
@@ -253,6 +278,7 @@ server <- function(input, output, session) {
       labs(title = paste("Comparing Swing Speed Against: Distribution of", input$compared_pitcher, " vs Overall Distribution"),
            x = "Swing Speed Against",
            y = "Frequency") +
+      xlim(50,100) +
       scale_fill_manual(values = c("Compared Pitcher" = "blue", "Overall" = "red")) +
       theme_minimal()
   })
