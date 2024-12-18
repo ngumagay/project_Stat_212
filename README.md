@@ -1,4 +1,4 @@
-# Project_Stat_212
+# Swing Speed and Pitch Metrics Analysis
 
 Nathan Gumagay, Hayes Waddell, Peter Ward
 
