@@ -77,6 +77,7 @@ ui <- navbarPage(
   tabPanel("Overview",
            fluidPage(
              h3("Swing Speed and Pitch Metrics Analysis"),
+             p("Created By: Nathan Gumagay, Hayes Waddell, and Peter Ward"),
              p("This app explores the relationships between swing speed and pitch metrics."),
              fluidRow(
                column(width = 6, 
@@ -156,7 +157,10 @@ ui <- navbarPage(
                  plotOutput("swing_speed_distribution_plot"),
                  tableOutput("pitch_metric_table")
                )
-             )
+             ),
+             p("This tab emphasizes the pitcher’s individual pitch metrics by comparing one of their specific pitches to the average MLB pitcher’s. First, on the graph we see the distribution of swing speeds 
+that the specific pitch omits. Then just below we compare the four most important pitch metrics that we decided on. Pitch speed, spin rate, horizontal break, and vertical break. Comparing those four metrics with the specified pitcher’s specific pitch and the average MLB pitcher’s specific pitch. We are able to draw conclusions on each pitcher’s pitches in their respective pitch arsenal by comparing it to the average MLB pitcher’s.
+")
            )
   ),
   
@@ -175,7 +179,8 @@ ui <- navbarPage(
                  tableOutput("correlation_table"),
                  plotOutput("correlation_plot")
                )
-             )
+             ),
+             p("This tab is where we drew most of our conclusions for each of our pitchers. The graph we made on this tab allows us to see how each pitch impacted the pitcher’s z-score in our four pitcher categories. Each pitch was pitted against each category then gave us each category's correlation with the pitcher’s z-score on that pitch. We then highlighted these correlations with our table. The table shows the pitcher’s pitch arsenal, then in the second column is the pitch metric that has the strongest influence on the pitch. Positive or negative, If there is a positive correlation between the metric and the pitch it tells us that the pitch’s specific metric is leading to higher swing speeds. With negative being the opposite. We can draw conclusions on each pitcher and make a strong case as to what metrics on each of their pitches is giving certain swing speed results.")
            )
   ),
   
@@ -191,7 +196,8 @@ ui <- navbarPage(
                mainPanel(
                  plotOutput("z_score_comparison_pitchtype_plot", height = "600px", width = "100%")
                )
-             )
+             ),
+             p("We decided to take a look into the z-score of each pitcher. Which was calculated through the batter’s perspective, as we were able to gain data on each batter’s average swing speed. Then calculating each pitcher’s swing speed against each batter. We gained their raw score and using the z score formula calculated the z score against all the batters in general. Our tab represents the z-score for each pitcher’s pitch arsenal compared to the z-score of the overall pitcher distribution of the z-score for the exact same pitch arsenal. Allows us to make conclusions about the difference in swing speed change the pitchers in our dataset have compared to the average MLB pitcher.")
            )
   ),
   
@@ -199,7 +205,8 @@ ui <- navbarPage(
   tabPanel("Swing Speed Z Score vs. ERA",
            fluidPage(
              h3("Mean Z-Score vs. ERA"),
-             plotlyOutput("mean_zscore_vs_era_plot")
+             plotlyOutput("mean_zscore_vs_era_plot"),
+             p("This tab allows us to look at the z-score that we calculated on a broader level compared to the previous tab. Looking at the overall z-score of the pitcher, their score will determine on average how much their pitches affect the swing speed of the batter. In the negative range would mean on average, batters will swing slower and positive would mean the opposite. Then throwing this variable onto a graph against pitcher ERA, we tried to see if there was any correlation between the two variables. The graph showed a small correlation but we concluded that it wasn’t enough to make a strong conclusion. But, this furthered our hypothesis that the factors going into pitchers limiting bat speed was more than just the pitcher.")
            )
   ),
   
@@ -216,7 +223,8 @@ ui <- navbarPage(
                  plotlyOutput("zscore_comparison_plot"),
                  textOutput("comparison_text")
                )
-             )
+             ),
+             p("This tab changes the point of analysis in our Shiny app, instead of looking at specific pitchers, we switched focus to looking at specific metrics. By choosing each metric we are able to compare the average across the league to the z-scores. Then, a comparison of Negative and Positive z-scores, looking at what the average is for each of the two types of z-score. Through this tab we can make league wide conclusions on what the pitch metric for certain pitches would look like. But, taking into consideration that there are limitations to the graph because of how much variation there is when analyzing pitching. That there is no specific way a pitcher will be successful especially when it comes to trying to execute statistical specificities.")
            )
   ),
   
@@ -232,7 +240,8 @@ ui <- navbarPage(
                mainPanel(
                  plotOutput("comparison_plot") 
                )
-             )
+             ),
+             p("This tab gives us a surface level analyzation of how pitchers can affect a batter’s swing speed. Giving us specific comparisons between each selected pitcher and the average MLB pitcher. The distributions between the two density plots will give us the different swing speeds that they induced. The conclusions that we see is that the pitchers that are distributed towards the lower swing speeds compared to the overall distribution were above average to elite pitchers.")
            )
   ),
   
@@ -254,7 +263,8 @@ ui <- navbarPage(
                mainPanel(
                  plotOutput("count_pitch_type_plot")
                )
-             )
+             ),
+             p("We wanted to add this tab because it puts swing speed into a very different perspective than what we have been looking at. It is super important to look at the swing speed of specific batters on certain counts because first, we can make definitive conclusions. Second, understand certain factors that are crucial to a batter’s tendencies. These graphs show three factors, number of balls, number of strikes, and pitch type.These stats are combined to show the distribution of swing speeds in these specific scenarios. Which are compared to the overall swing speeds, where we can see drastic differences in distribution in different circumstances. We conclude that the batter’s swing speed will change on certain circumstances and especially on certain pitch types. Which is also an important factor to the reasons we can see these differences in swing speeds by batters around the league.")
            )
   )
 )
